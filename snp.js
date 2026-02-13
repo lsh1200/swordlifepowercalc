@@ -258,8 +258,8 @@ function refreshtargetpowerview() {
 
 function computesuperpower() {
 	tg = 0;
-	tp = 0;
-	tb = 0;
+	tp = fragp;
+	tb = fragb;
 
 	strch = '', strlk = '', strrm = '';
 	// 1.1. 统计碎片(金)
