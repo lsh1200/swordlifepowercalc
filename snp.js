@@ -571,7 +571,7 @@ $('#ssub').on('click', function(e) {
 //////////////////////////////////////////////
 
 // 选择现有碎片画面 - 打开
-$('#sf1').on('click', function (e) {
+$('#sfs').on('click', function (e) {
 	sm = new Map();
 	frags.forEach(function(it) {
 		sm.set(it.id, it.amount);
