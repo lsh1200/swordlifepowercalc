@@ -1,7 +1,7 @@
 	
 /******************** Data ********************/
-shops = ["道蘊商店", "論劍商店", "諸天商會", "宗門寶庫", "煞海寶箱"];
-bounds = ["人界", "魔界", "煞海"];
+shops = ["道蘊商店", "論劍商店", "諸天商會", "宗門寶庫", "百族寶箱"];
+bounds = ["人界", "返虛", "煞海", "合體", "蠱族"];
 types = ["火", "劍", "雷", "百族"];
 colors = ["text-danger", "text-warning", "text-primary", "text-black"];
 
@@ -33,7 +33,7 @@ levels = [
 		{n:"地3", f:600 , g:1040, p:2250, b:5500 },
 		{n:"天1", f:800 , g:1360, p:2950, b:7300 },
 		{n:"天2", f:1040, g:1760, p:3750, b:9400 },
-		{n:"天3", f:1320, g:2240, p:4750, b:11800}], // 魔界
+		{n:"天3", f:1320, g:2240, p:4750, b:11800}], // 返虛
 	[
 		{n:"無" , f:0   , g:0   , p:0   , b:0    },
 		{n:"1星", f:40  , g:0   , p:0   , b:0    },
@@ -47,7 +47,38 @@ levels = [
 		{n:"地3", f:600 , g:2000, p:3100, b:7950 },
 		{n:"天1", f:800 , g:2560, p:4000, b:10150},
 		{n:"天2", f:1040, g:3200, p:5000, b:12650},
-		{n:"天3", f:1320, g:3920, p:6200, b:15450}] // 煞海
+		{n:"天3", f:1320, g:3920, p:6200, b:15450}], // 煞海
+	[
+		{n:"無" , f:0   , g:0   , p:0   , b:0    },
+		{n:"1星", f:40  , g:0   , p:0   , b:0    },
+		{n:"2星", f:40  , g:120 , p:100 , b:200  },
+		{n:"3星", f:40  , g:240 , p:200 , b:400  },
+		{n:"玄1", f:80  , g:360 , p:350 , b:750  },
+		{n:"玄2", f:160 , g:480 , p:550 , b:1250 },
+		{n:"玄3", f:240 , g:640 , p:800 , b:1900 },
+		{n:"地1", f:360 , g:840 , p:1150, b:2800 },
+		{n:"地2", f:480 , g:1080, p:1650, b:4000 },
+		{n:"地3", f:640 , g:1360, p:2250, b:5500 },
+		{n:"天1", f:840 , g:1720, p:2950, b:7300 },
+		{n:"天2", f:1080, g:2160, p:3750, b:9400 },
+		{n:"天3", f:1360, g:2680, p:4750, b:11800},
+		//{n:"天4", f:1680, g:3280, p:5750, b:14200},
+		//{n:"天5", f:2040, g:3960, p:6750, b:16600},
+	] // 合體
+	,[
+		{n:"無" , f:0   , g:0   , p:0   , b:0    },
+		{n:"1星", f:40  , g:0   , p:0   , b:0    },
+		{n:"2星", f:40  , g:160 , p:100 , b:300  },
+		{n:"3星", f:40  , g:320 , p:250 , b:650  },
+		{n:"玄1", f:80  , g:520 , p:500 , b:1250 },
+		{n:"玄2", f:160 , g:720 , p:800 , b:2050 },
+		{n:"玄3", f:240 , g:1000, p:1250, b:3150 },
+		{n:"地1", f:320 , g:1360, p:1750, b:4450 },
+		{n:"地2", f:440 , g:1800, p:2350, b:6050 },
+		{n:"地3", f:600 , g:2320, p:3100, b:7950 },
+		{n:"天1", f:800 , g:2920, p:4000, b:10150},
+		{n:"天2", f:1040, g:3600, p:5000, b:12650},
+		{n:"天3", f:1320, g:4360, p:6200, b:15450}], // 蠱族
 ];
 
 skills = [
@@ -76,7 +107,7 @@ skills = [
 	{id:21, name:"驚蟄", shop:1, bound:0, type:2},
 	{id:22, name:"虎鳴", shop:2, bound:0, type:2},
 	{id:23, name:"龍吟", shop:3, bound:0, type:2},
-	// 魔族
+	// 返虛
 	{id:24, name:"劫焰", shop:0, bound:1, type:0},
 	{id:25, name:"衡陽", shop:1, bound:1, type:0},
 	{id:26, name:"業火", shop:2, bound:1, type:0},
@@ -94,6 +125,24 @@ skills = [
 	{id:37, name:"冥火", shop:4, bound:2, type:3},
 	{id:38, name:"業蓮", shop:4, bound:2, type:3},
 	{id:39, name:"裂天", shop:4, bound:2, type:3},
+	// 合體
+	{id:40, name:"陽隕", shop:0, bound:3, type:0},
+	{id:41, name:"巡日", shop:1, bound:3, type:0},
+	{id:42, name:"炎爆", shop:2, bound:3, type:0},
+	{id:43, name:"星燎", shop:3, bound:3, type:0},
+	{id:44, name:"玄峰", shop:0, bound:3, type:1},
+	{id:45, name:"貫日", shop:1, bound:3, type:1},
+	{id:46, name:"鎮岳", shop:2, bound:3, type:1},
+	{id:47, name:"破月", shop:3, bound:3, type:1},
+	{id:48, name:"天怒", shop:0, bound:3, type:2},
+	{id:49, name:"嵐霆", shop:1, bound:3, type:2},
+	{id:50, name:"鬥辰", shop:2, bound:3, type:2},
+	{id:51, name:"崩雲", shop:3, bound:3, type:2},
+	// 蠱族
+	{id:52, name:"幽蝕", shop:4, bound:4, type:3},
+	{id:53, name:"驚蟬", shop:4, bound:4, type:3},
+	{id:54, name:"蛻蛇", shop:4, bound:4, type:3},
+	{id:55, name:"祭律", shop:4, bound:4, type:3},
 ];
 
 /******************** Core Compute & Default View ********************/
@@ -392,7 +441,9 @@ $('#ttbl > tbody > tr').on('click', function (e) {
 		skills.forEach(function(it) {
 			sk = skills[it.id];
 			issel = target[i].id == sk.id;
-			name = sk.name + (sk.bound ? " (魔)" : "");		
+			name = sk.name;
+			if (sk.bound == 1 || sk.bound == 2) name += " (魔)";
+			if (sk.bound == 3 || sk.bound == 4) name += " (蠱)";
 			$('#tl' + i)[0].innerHTML += "<option class='" + colors[sk.type] + "' value='" + it.id + "'" + (issel ? "selected" : "") + ">" + name + "</option>";
 		});
 		$('#tll' + i)[0].innerHTML = '';
@@ -440,7 +491,9 @@ $('#stbl > tbody > tr').on('click', function (e) {
 	skills.forEach(function(it) {
 		sk = skills[it.id];
 		issel = source[idx].id == sk.id;
-		name = sk.name + (sk.bound ? " (魔)" : "");		
+		name = sk.name;
+		if (sk.bound == 1 || sk.bound == 2) name += " (魔)";
+		if (sk.bound == 3 || sk.bound == 4) name += " (蠱)";
 		$('#sl1')[0].innerHTML += "<option class='" + colors[sk.type] + "' value='" + it.id + "'" + (issel ? "selected" : "") + ">" + name + "</option>";
 	});
 	$('#sll1')[0].innerHTML = '';
@@ -468,9 +521,9 @@ $('#stbl > tbody > tr').on('click', function (e) {
 		return a.shop - b.shop;
 	});
 	strhtml = '<div class="row">';
-	for (i = 0; i < sks.length; i+=9) {
+	for (i = 0; i < sks.length; i+=12) {
 		strhtml += '<div class="col col-md-6 px-2 mx-0 my-1 border align-start" style="min-width:120px; background-color: rgba(255, 255, 255, 0.9);"><h6 class="my-1">' + shops[sks[i].shop] + ' ' + '</h6><hr class="divider my-2">';
-		for (j = i; j < Math.min(i + 9, sks.length); j++) {
+		for (j = i; j < Math.min(i + 12, sks.length); j++) {
 			amount = sm.get(sks[j].id) == undefined ? "" : sm.get(sks[j].id);
 			isdis = source[idx].id == sks[j].id ? " disabled" : "";
 			if (isdis)
@@ -505,7 +558,7 @@ function sponchanged() {
 	console.log(colors[skills[id].type]);
 	$('#sl1').addClass(colors[skills[id].type]);
 	// 清除材料
-	for (i = 0; i < 40; i++)
+	for (i = 0; i < skills.length; i++)
 		$('#sr' + i)[0].innerHTML = '';
 	// 禁用启用本体选择
 	$('#ssshop button').prop('disabled', false);
@@ -524,7 +577,7 @@ function slonchanged() {
 	$('#sr' + id)[0].innerHTML = levels[skills[id].bound][lv].f - 40;
 	// 更新剩余数量
 	a = 0;
-	for (i = 0; i < 40; i++)
+	for (i = 0; i < skills.length; i++)
 		a += new Number($('#sr' + i)[0].innerHTML);	
 	$('#ssrccnt')[0].innerHTML = levels[skills[id].bound][lv].g - (a - (levels[skills[id].bound][lv].f - 40));
 
@@ -556,7 +609,7 @@ $('#ssub').on('click', function(e) {
 	source[idx].id = Number($('#sl1')[0].value);
 	source[idx].level = Number($('#sll1')[0].value);
 	source[idx].src = [];
-	for (i = 0; i < 40; i++) {
+	for (i = 0; i < skills.length; i++) {
 		cnt = Number($('#sr' + i)[0].innerHTML);
 		if (cnt > 0 && source[idx].id != i)
 			source[idx].src.push({id:i, amount:cnt});
@@ -590,9 +643,9 @@ $('#sfs').on('click', function (e) {
 		return a.shop - b.shop;
 	});
 	strhtml = '<div class="row">';
-	for (i = 0; i < sks.length; i+=9) {
+	for (i = 0; i < sks.length; i+=12) {
 		strhtml += '<div class="col col-md-6 px-2 mx-0 my-1 border align-start" style="min-width:120px; background-color: rgba(255, 255, 255, 0.9);"><h6 class="my-1">' + shops[sks[i].shop] + ' ' + '</h6><hr class="divider my-2">';
-		for (j = i; j < Math.min(i + 9, sks.length); j++) {
+		for (j = i; j < Math.min(i + 12, sks.length); j++) {
 			amount = sm.get(sks[j].id) == undefined ? "" : sm.get(sks[j].id);
 			strhtml += '<p id="src' + sks[j].id + '" class="text-start mb-1"><span class=' + colors[sks[j].type] + '>' + sks[j].name + '</span>';
 			strhtml += ' <button onclick="sfonminus(' +  + sks[j].id + ')">-</button><button onclick="sfonplus(' +  + sks[j].id + ')">+</button>';
@@ -626,7 +679,7 @@ function sfonplus(v) {
 // 选择现有碎片画面 - 完成
 $('#sfsub').on('click', function(e) {
 	frags = [];
-	for (i = 0; i < 40; i++) {
+	for (i = 0; i < skills.length; i++) {
 		cnt = Number($('#sf' + i)[0].innerHTML);
 		if (cnt > 0)
 			frags.push({id:i, amount:cnt});
