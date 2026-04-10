@@ -62,8 +62,8 @@ levels = [
 		{n:"天1", f:840 , g:1720, p:2950, b:7300 },
 		{n:"天2", f:1080, g:2160, p:3750, b:9400 },
 		{n:"天3", f:1360, g:2680, p:4750, b:11800},
-		//{n:"天4", f:1680, g:3280, p:5750, b:14200},
-		//{n:"天5", f:2040, g:3960, p:6750, b:16600},
+		{n:"天4", f:1680, g:3280, p:5750, b:14200},
+		{n:"天5", f:2040, g:3960, p:6750, b:16600},
 	] // 合體
 	,[
 		{n:"無" , f:0   , g:0   , p:0   , b:0    },
@@ -470,6 +470,20 @@ $('#tsub').on('click', function(e) {
 	updatedatadone();
 });
 
+// 选择目标神通画面 - 更新等级列表
+function refreshtargetlevel(i, id) {
+	ov = Number($('#tll' + i)[0].value);
+	sk = skills[id];
+	$('#tll' + i)[0].innerHTML = '';
+	for (j = 1; j < levels[sk.bound].length; j++) {
+		lv = levels[sk.bound][source[i].level];
+		issel = j == ov;
+		if (j == levels[sk.bound].length - 1 && j < ov)
+			issel = true;
+		$('#tll' + i)[0].innerHTML += "<option value='" + j + "'" + (issel ? "selected" : "") + ">" + levels[sk.bound][j].n + "</option>";
+	}
+}
+
 // 选择目標神通画面 - 選擇改變
 function tponchanged(i) {
 	j = Number($('#tl' + i)[0].value);
@@ -477,6 +491,7 @@ function tponchanged(i) {
 		$('#tl' + i).removeClass(it);
 	});
 	$('#tl' + i).addClass(colors[skills[j].type]);
+	refreshtargetlevel(i, j);
 }
 
 // 选择现有神通画面 - 打开
@@ -547,6 +562,22 @@ function refreshspsrcbtn() {
 	$('#ssub').prop('disabled', Number($('#ssrccnt')[0].innerHTML) != 0);
 }
 
+// 选择现有神通画面 - 更新等级列表
+function refresholdlevel(id) {
+	ov = Number($('#sll1')[0].value);
+	console.log(id);
+	sk = skills[id];
+	$('#sll1')[0].innerHTML = '';
+	for (j = 1; j < levels[sk.bound].length; j++) {
+		lv = levels[sk.bound][source[idx].level];
+		issel = j == ov;
+		if (j == levels[sk.bound].length - 1 && j < ov)
+			issel = true;
+		$('#sll1')[0].innerHTML += "<option value='" + j + "'" + (issel ? "selected" : "") + ">" + levels[sk.bound][j].n + "</option>";
+	}
+	slonchanged();
+}
+
 // 选择现有神通画面 - 改變选择
 function sponchanged() {
 	// 修改顏色
@@ -563,6 +594,8 @@ function sponchanged() {
 	// 禁用启用本体选择
 	$('#ssshop button').prop('disabled', false);
 	$('#src' + id + ' button').prop('disabled', true);
+	// 更新等级列表
+	refresholdlevel(id);
 	// 更新本体, 剩余数量
 	$('#sr' + id)[0].innerHTML = levels[skills[id].bound][lv].f - 40;
 	$('#ssrccnt')[0].innerHTML = levels[skills[id].bound][lv].g;
