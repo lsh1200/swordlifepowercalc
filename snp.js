@@ -553,8 +553,13 @@ function buildShopSelector(fragmentMap, disabledSkillId, minusFn, plusFn, spanPr
 			html += '<span class=' + colors[sortedSkills[j].type] + '>' + sortedSkills[j].name + '</span>';
 			html += ' <button onclick="' + minusFn + '(' + skillId + ')"' + disabledAttr + '>-</button>';
 			html += '<button onclick="' + plusFn + '(' + skillId + ')"' + disabledAttr + '>+</button>';
-			var editFn = "badgeClickToEdit('" + spanPrefix + skillId + "'," + spanPrefix + "Edit)";
-			html += ' <span id="' + spanPrefix + skillId + '" class="badge text-bg-secondary" style="cursor:pointer" onclick="' + editFn + '">' + amount + '</span>';
+			var editClick = '';
+			var editCursor = '';
+			if (!isDisabled) {
+				editClick = ' onclick="badgeClickToEdit(\'' + spanPrefix + skillId + '\',' + spanPrefix + 'Edit)"';
+				editCursor = 'cursor:pointer;';
+			}
+			html += ' <span id="' + spanPrefix + skillId + '" class="badge text-bg-secondary" style="' + editCursor + '"' + editClick + '>' + amount + '</span>';
 		}
 		html += '</div>';
 	}
