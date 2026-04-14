@@ -414,20 +414,14 @@ h1, h2, h3, h4, h5, h6 {
   min-height: 400px;
   margin-top: -44px;
   z-index: 2;
-  mask-image: linear-gradient(
-    to bottom,
-    transparent 0%,
-    black 4%,
-    black 85%,
-    transparent 100%
-  );
-  -webkit-mask-image: linear-gradient(
-    to bottom,
-    transparent 0%,
-    black 4%,
-    black 85%,
-    transparent 100%
-  );
+  mask-image:
+    linear-gradient(to bottom, transparent 0%, black 4%, black 85%, transparent 100%),
+    linear-gradient(to right, transparent 0%, black 20%, black 100%);
+  mask-composite: intersect;
+  -webkit-mask-image:
+    linear-gradient(to bottom, transparent 0%, black 4%, black 85%, transparent 100%),
+    linear-gradient(to right, transparent 0%, black 20%, black 100%);
+  -webkit-mask-composite: source-in;
 }
 
 .character-panel canvas {
