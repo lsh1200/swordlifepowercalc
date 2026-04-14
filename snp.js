@@ -513,7 +513,7 @@ function badgeClickToEdit(spanId, onCommit) {
 	function commit() {
 		var raw = Math.max(0, parseInt(input.value, 10) || 0);
 		var snapped = Math.round(raw / FRAGMENT_UNIT) * FRAGMENT_UNIT;
-		span.innerHTML = snapped || '';
+		span.innerHTML = snapped ? snapped : '';
 		onCommit(snapped, oldVal);
 	}
 	input.addEventListener('blur', commit);
@@ -637,7 +637,8 @@ function srEdit(newVal, oldVal) {
 function sronminus(v) {
 	var val = Number($('#sr' + v)[0].innerHTML);
 	if (val > 0) {
-		$('#sr' + v)[0].innerHTML = val - FRAGMENT_UNIT;
+		var newVal = val - FRAGMENT_UNIT;
+		$('#sr' + v)[0].innerHTML = newVal || '';
 		var sv = Number($('#ssrccnt')[0].innerHTML);
 		$('#ssrccnt')[0].innerHTML = sv + FRAGMENT_UNIT;
 	}
@@ -658,7 +659,8 @@ function sfEdit() {
 function sfonminus(v) {
 	var val = Number($('#sf' + v)[0].innerHTML);
 	if (val > 0) {
-		$('#sf' + v)[0].innerHTML = val - FRAGMENT_UNIT;
+		var newVal = val - FRAGMENT_UNIT;
+		$('#sf' + v)[0].innerHTML = newVal || '';
 	}
 }
 
