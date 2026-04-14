@@ -787,7 +787,9 @@ $('#stbl > tbody > tr').on('click', function(e) {
 
 	if (dirtySource && String(dirtySourceIdx) === String(clickedIdx)) {
 		// Same row with unsaved changes — reopen without resetting
+		document.title = 'GUARD HIT dirtyIdx=' + dirtySourceIdx + ' clicked=' + clickedIdx;
 	} else {
+		document.title = 'GUARD MISS dirty=' + dirtySource + ' dirtyIdx=' + dirtySourceIdx + ' clicked=' + clickedIdx;
 		currentSourceIdx = clickedIdx;
 
 		$('#sl1')[0].innerHTML = '';
