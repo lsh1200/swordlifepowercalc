@@ -156,30 +156,31 @@
     if (!em.baseVerts) return;
     var verts = em.mesh.geometry.getBuffer('aVertexPosition').data;
     var ph = em.ph;
+    // The crease is the eyelid fold — top portion of the eye region
+    // Below the crease is the actual eye opening
     var creaseY = em.oy + ph * creaseRatio;
+    var bottomY = em.oy + ph;
+    var ease = closeness * closeness * (3 - 2 * closeness);
 
     for (var row = 0; row <= em.rows; row++) {
       for (var col = 0; col <= em.cols; col++) {
         var idx = (row * (em.cols + 1) + col) * 2;
         var baseY = em.baseVerts[idx + 1];
 
-        // Vertices below the crease line get pushed upward toward the crease
-        // This simulates the lower part of the eye being hidden by the eyelid
-        if (baseY > creaseY) {
-          var distFromCrease = baseY - creaseY;
-          var maxTravel = ph * (1 - creaseRatio);
-          var t = distFromCrease / maxTravel; // 0 at crease, 1 at bottom
-
-          // Smoothstep for natural motion
-          var ease = closeness * closeness * (3 - 2 * closeness);
-
-          // Push vertex toward crease line
-          verts[idx + 1] = baseY - distFromCrease * ease;
+        // Top vertices (above crease = eyelid skin) push DOWN to cover the eye
+        if (baseY <= creaseY) {
+          // Eyelid stays in place
+          verts[idx + 1] = baseY;
         } else {
-          verts[idx + 1] = em.baseVerts[idx + 1];
+          // Vertices below crease: collapse upward toward crease
+          // The further from crease, the more they move
+          var distFromCrease = baseY - creaseY;
+          var eyeHeight = bottomY - creaseY;
+
+          // During blink, all eye-area vertices compress toward the crease line
+          verts[idx + 1] = creaseY + distFromCrease * (1 - ease);
         }
 
-        // Keep X from base
         verts[idx] = em.baseVerts[idx];
       }
     }
