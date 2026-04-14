@@ -153,6 +153,13 @@ var source, frags, fragp, fragb, target, keep;
 var currentSourceIdx;
 var sourceOffcanvas, targetOffcanvas, keepOffcanvas;
 
+// Dirty (unsaved changes) tracking per panel
+var dirtySource = false, dirtySourceIdx = -1;
+var dirtyFrag = false;
+var dirtyTarget = false;
+var dirtyKeep = false;
+var savedFlag = false; // set true right before hide when saving
+
 // ===== URL Data Validation =====
 function validateUrlData(data) {
 	if (!data || typeof data !== 'object') return false;
@@ -692,23 +699,54 @@ window.sfonplus = sfonplus;
 window.sfEdit = sfEdit;
 window.tponchanged = tponchanged;
 
+// ===== Dirty Indicator =====
+function refreshDirtyIndicators() {
+	var srcDirty = dirtySource || dirtyFrag || dirtyKeep;
+	$('#srcDirty')[0].style.display = srcDirty ? 'inline' : 'none';
+	$('#tgtDirty')[0].style.display = dirtyTarget ? 'inline' : 'none';
+}
+
 // ===== jQuery Event Bindings =====
+
+// Hidden event listeners — mark dirty if not saved
+$('#ssel').on('hidden.bs.offcanvas', function() {
+	if (!savedFlag) { dirtySource = true; dirtySourceIdx = currentSourceIdx; }
+	savedFlag = false;
+	refreshDirtyIndicators();
+});
+$('#fsel').on('hidden.bs.offcanvas', function() {
+	if (!savedFlag) { dirtyFrag = true; }
+	savedFlag = false;
+	refreshDirtyIndicators();
+});
+$('#tsel').on('hidden.bs.offcanvas', function() {
+	if (!savedFlag) { dirtyTarget = true; }
+	savedFlag = false;
+	refreshDirtyIndicators();
+});
+$('#ksel').on('hidden.bs.offcanvas', function() {
+	if (!savedFlag) { dirtyKeep = true; }
+	savedFlag = false;
+	refreshDirtyIndicators();
+});
 
 // Target table row click — open target selection panel
 $('#ttbl > tbody > tr').on('click', function() {
-	for (var i = 0; i < SLOT_COUNT; i++) {
-		$('#tl' + i)[0].innerHTML = '';
-		colors.forEach(function(c) { $('#tl' + i).removeClass(c); });
-		$('#tl' + i).addClass(colors[skills[target[i].id].type]);
-		skills.forEach(function(sk) {
-			var isSelected = (target[i].id === sk.id);
-			$('#tl' + i)[0].innerHTML += "<option class='" + colors[sk.type] + "' value='" + sk.id + "'" + (isSelected ? "selected" : "") + ">" + getSkillDisplayName(sk) + "</option>";
-		});
-		$('#tll' + i)[0].innerHTML = '';
-		var skill = skills[target[i].id];
-		for (var j = 1; j < levels[skill.bound].length; j++) {
-			var isSelected = (j === target[i].level);
-			$('#tll' + i)[0].innerHTML += "<option value='" + j + "'" + (isSelected ? "selected" : "") + ">" + levels[skill.bound][j].n + "</option>";
+	if (!dirtyTarget) {
+		for (var i = 0; i < SLOT_COUNT; i++) {
+			$('#tl' + i)[0].innerHTML = '';
+			colors.forEach(function(c) { $('#tl' + i).removeClass(c); });
+			$('#tl' + i).addClass(colors[skills[target[i].id].type]);
+			skills.forEach(function(sk) {
+				var isSelected = (target[i].id === sk.id);
+				$('#tl' + i)[0].innerHTML += "<option class='" + colors[sk.type] + "' value='" + sk.id + "'" + (isSelected ? "selected" : "") + ">" + getSkillDisplayName(sk) + "</option>";
+			});
+			$('#tll' + i)[0].innerHTML = '';
+			var skill = skills[target[i].id];
+			for (var j = 1; j < levels[skill.bound].length; j++) {
+				var isSelected = (j === target[i].level);
+				$('#tll' + i)[0].innerHTML += "<option value='" + j + "'" + (isSelected ? "selected" : "") + ">" + levels[skill.bound][j].n + "</option>";
+			}
 		}
 	}
 	targetOffcanvas = new bootstrap.Offcanvas('#tsel');
@@ -723,6 +761,8 @@ $('#tsub').on('click', function() {
 	}
 	refreshtargetpowerview();
 	computesuperpower();
+	savedFlag = true;
+	dirtyTarget = false;
 	targetOffcanvas.hide();
 	updatedatadone();
 });
@@ -730,32 +770,38 @@ $('#tsub').on('click', function() {
 // Source table row click — open source selection panel
 $('#stbl > tbody > tr').on('click', function(e) {
 	var targetId = e.target.id;
-	currentSourceIdx = targetId[targetId.length - 1];
+	var clickedIdx = targetId[targetId.length - 1];
 
-	$('#sl1')[0].innerHTML = '';
-	colors.forEach(function(c) { $('#sl1').removeClass(c); });
-	$('#sl1').addClass(colors[skills[source[currentSourceIdx].id].type]);
-	skills.forEach(function(sk) {
-		var isSelected = (source[currentSourceIdx].id === sk.id);
-		$('#sl1')[0].innerHTML += "<option class='" + colors[sk.type] + "' value='" + sk.id + "'" + (isSelected ? "selected" : "") + ">" + getSkillDisplayName(sk) + "</option>";
-	});
+	if (!dirtySource || dirtySourceIdx !== Number(clickedIdx)) {
+		currentSourceIdx = clickedIdx;
+		dirtySource = false;
+		dirtySourceIdx = -1;
 
-	$('#sll1')[0].innerHTML = '';
-	var skill = skills[source[currentSourceIdx].id];
-	for (var j = 1; j < levels[skill.bound].length; j++) {
-		var isSelected = (j === source[currentSourceIdx].level);
-		$('#sll1')[0].innerHTML += "<option value='" + j + "'" + (isSelected ? "selected" : "") + ">" + levels[skill.bound][j].n + "</option>";
+		$('#sl1')[0].innerHTML = '';
+		colors.forEach(function(c) { $('#sl1').removeClass(c); });
+		$('#sl1').addClass(colors[skills[source[currentSourceIdx].id].type]);
+		skills.forEach(function(sk) {
+			var isSelected = (source[currentSourceIdx].id === sk.id);
+			$('#sl1')[0].innerHTML += "<option class='" + colors[sk.type] + "' value='" + sk.id + "'" + (isSelected ? "selected" : "") + ">" + getSkillDisplayName(sk) + "</option>";
+		});
+
+		$('#sll1')[0].innerHTML = '';
+		var skill = skills[source[currentSourceIdx].id];
+		for (var j = 1; j < levels[skill.bound].length; j++) {
+			var isSelected = (j === source[currentSourceIdx].level);
+			$('#sll1')[0].innerHTML += "<option value='" + j + "'" + (isSelected ? "selected" : "") + ">" + levels[skill.bound][j].n + "</option>";
+		}
+
+		var srcFragMap = new Map();
+		source[currentSourceIdx].src.forEach(function(item) {
+			srcFragMap.set(item.id, item.amount);
+		});
+		$('#ssrccnt')[0].innerText = 0;
+
+		$('#ssshop')[0].innerHTML = buildShopSelector(
+			srcFragMap, source[currentSourceIdx].id, 'sronminus', 'sronplus', 'sr'
+		);
 	}
-
-	var srcFragMap = new Map();
-	source[currentSourceIdx].src.forEach(function(item) {
-		srcFragMap.set(item.id, item.amount);
-	});
-	$('#ssrccnt')[0].innerText = 0;
-
-	$('#ssshop')[0].innerHTML = buildShopSelector(
-		srcFragMap, source[currentSourceIdx].id, 'sronminus', 'sronplus', 'sr'
-	);
 
 	sourceOffcanvas = new bootstrap.Offcanvas('#ssel');
 	sourceOffcanvas.show();
@@ -774,24 +820,29 @@ $('#ssub').on('click', function() {
 	}
 	refreshsourcepowerview();
 	computesuperpower();
+	savedFlag = true;
+	dirtySource = false;
+	dirtySourceIdx = -1;
 	sourceOffcanvas.hide();
 	updatedatadone();
 });
 
 // Fragment row click — open fragment selection panel
 $('#sfs').on('click', function() {
-	var fragMap = new Map();
-	frags.forEach(function(item) {
-		fragMap.set(item.id, item.amount);
-	});
-	$('#ssrccnt')[0].innerText = 0;
+	if (!dirtyFrag) {
+		var fragMap = new Map();
+		frags.forEach(function(item) {
+			fragMap.set(item.id, item.amount);
+		});
+		$('#ssrccnt')[0].innerText = 0;
 
-	$('#sfshop')[0].innerHTML = buildShopSelector(
-		fragMap, -1, 'sfonminus', 'sfonplus', 'sf'
-	);
+		$('#sfshop')[0].innerHTML = buildShopSelector(
+			fragMap, -1, 'sfonminus', 'sfonplus', 'sf'
+		);
 
-	$('#fragpcnt')[0].value = fragp;
-	$('#fragbcnt')[0].value = fragb;
+		$('#fragpcnt')[0].value = fragp;
+		$('#fragbcnt')[0].value = fragb;
+	}
 
 	sourceOffcanvas = new bootstrap.Offcanvas('#fsel');
 	sourceOffcanvas.show();
@@ -810,13 +861,17 @@ $('#sfsub').on('click', function() {
 	fragp = Number($('#fragpcnt')[0].value);
 	refreshsourcepowerview();
 	computesuperpower();
+	savedFlag = true;
+	dirtyFrag = false;
 	sourceOffcanvas.hide();
 	updatedatadone();
 });
 
 // Keep row click — open keep selection panel
 $('#skp').on('click', function() {
-	$('#kshop')[0].innerHTML = buildKeepSelector();
+	if (!dirtyKeep) {
+		$('#kshop')[0].innerHTML = buildKeepSelector();
+	}
 	keepOffcanvas = new bootstrap.Offcanvas('#ksel');
 	keepOffcanvas.show();
 });
@@ -833,6 +888,8 @@ $('#ksub').on('click', function() {
 	refreshkeepview();
 	refreshsourcepowerview();
 	computesuperpower();
+	savedFlag = true;
+	dirtyKeep = false;
 	keepOffcanvas.hide();
 	updatedatadone();
 });
