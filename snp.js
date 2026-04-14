@@ -702,8 +702,19 @@ window.tponchanged = tponchanged;
 // ===== Dirty Indicator =====
 function refreshDirtyIndicators() {
 	var srcDirty = dirtySource || dirtyFrag || dirtyKeep;
-	$('#srcDirty')[0].style.display = srcDirty ? 'inline' : 'none';
-	$('#tgtDirty')[0].style.display = dirtyTarget ? 'inline' : 'none';
+	var srcEl = $('#srcDirty')[0];
+	var tgtEl = $('#tgtDirty')[0];
+	if (srcDirty) {
+		var parts = [];
+		if (dirtySource) parts.push('神通#' + (Number(dirtySourceIdx) + 1));
+		if (dirtyFrag) parts.push('殘卷');
+		if (dirtyKeep) parts.push('保留');
+		srcEl.textContent = ' (未保存: ' + parts.join(', ') + ')';
+		srcEl.style.display = 'inline';
+	} else {
+		srcEl.style.display = 'none';
+	}
+	tgtEl.style.display = dirtyTarget ? 'inline' : 'none';
 }
 
 // ===== jQuery Event Bindings =====
@@ -772,10 +783,10 @@ $('#stbl > tbody > tr').on('click', function(e) {
 	var targetId = e.target.id;
 	var clickedIdx = targetId[targetId.length - 1];
 
-	if (!dirtySource || dirtySourceIdx !== Number(clickedIdx)) {
+	if (dirtySource && dirtySourceIdx === Number(clickedIdx)) {
+		// Same row with unsaved changes — reopen without resetting
+	} else {
 		currentSourceIdx = clickedIdx;
-		dirtySource = false;
-		dirtySourceIdx = -1;
 
 		$('#sl1')[0].innerHTML = '';
 		colors.forEach(function(c) { $('#sl1').removeClass(c); });
@@ -801,6 +812,9 @@ $('#stbl > tbody > tr').on('click', function(e) {
 		$('#ssshop')[0].innerHTML = buildShopSelector(
 			srcFragMap, source[currentSourceIdx].id, 'sronminus', 'sronplus', 'sr'
 		);
+
+		dirtySource = false;
+		dirtySourceIdx = -1;
 	}
 
 	sourceOffcanvas = new bootstrap.Offcanvas('#ssel');
