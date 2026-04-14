@@ -59,13 +59,11 @@
 
     var tw = sprite.texture.width;
     var th = sprite.texture.height;
-    // Scale to fit width, let height overflow top
+    // Scale to fit panel width
     var scale = s.w / tw;
-    if (th * scale < s.h) scale = s.h / th;
     sprite.scale.set(scale);
     sprite.x = s.w / 2;
-    // Shift up so hands are visible at the bottom
-    sprite.y = s.h - th * scale;
+    sprite.y = 0;
   }
 
   function animate(delta) {
@@ -87,15 +85,9 @@
       var drift = Math.sin(time * 0.7) * 6;
       sprite.x = s.w / 2 + drift;
 
-      // Base Y: anchor to bottom so hands show
-      var tw = sprite.texture.width;
-      var th = sprite.texture.height;
-      var baseScale = Math.max(s.w / tw, s.h / th);
-      var baseY = s.h - th * baseScale;
-
-      // Vertical float — gentle bobbing
+      // Vertical float — gentle bobbing from top
       var bob = Math.sin(time * 1.0) * 3;
-      sprite.y = baseY + bob;
+      sprite.y = bob;
 
       // Mouse parallax
       if (isHovering) {
