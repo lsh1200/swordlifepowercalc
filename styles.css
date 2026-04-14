@@ -412,6 +412,8 @@ h1, h2, h3, h4, h5, h6 {
   position: relative;
   overflow: hidden;
   min-height: 340px;
+  margin-top: -160px;
+  z-index: 2;
   mask-image: linear-gradient(
     to bottom,
     transparent 0%,
