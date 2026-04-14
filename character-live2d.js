@@ -1,10 +1,8 @@
 // Character Live2D-style Animation
-// Uses PixiJS displacement filter for breathing/swaying on a static image
+// Uses PixiJS displacement filter + drawn eyelid blink
 (function () {
   var CHAR_IMG = 'character-clean.png';
   var DISP_IMG = 'character-displacement.png';
-  var LID_L_IMG = 'eyelid-left.png';
-  var LID_R_IMG = 'eyelid-right.png';
 
   var canvas = document.getElementById('charCanvas');
   if (!canvas) return;
@@ -34,24 +32,29 @@
   var sprite = null;
   var dispSprite = null;
   var dispFilter = null;
-  var lidL = null;
-  var lidR = null;
+  var blinkGfx = null;
   var time = 0;
   var mouseX = 0;
   var mouseY = 0;
   var isHovering = false;
 
-  // Blink state
+  // Blink
   var blinkTimer = 0;
-  var blinkInterval = 3 + Math.random() * 4; // 3-7 seconds between blinks
-  var blinkPhase = 0; // 0 = open, >0 = in blink animation
-  var BLINK_DURATION = 0.15; // seconds for close, same for open
+  var blinkInterval = 2;
+  var blinkPhase = 0;
+  var BLINK_SPEED = 3.0; // higher = faster blink
 
-  // Eye positions in normalized image coordinates
-  var leftEye = { x: 0.406, y: 0.233, w: 0.110, h: 0.036 };
-  var rightEye = { x: 0.533, y: 0.231, w: 0.102, h: 0.036 };
+  // Eye positions (normalized to image size)
+  // Left eye:  x=225-290, y=235-260 on 591x848 image
+  // Right eye: x=335-390, y=233-258 on 591x848 image
+  var eyes = [
+    { x: 225/591, y: 235/848, w: 65/591, h: 25/848 },
+    { x: 335/591, y: 233/848, w: 55/591, h: 25/848 }
+  ];
+  // Skin color sampled from around her eyes
+  var skinColor = 0xD8C8BC;
 
-  PIXI.Assets.load([CHAR_IMG, DISP_IMG, LID_L_IMG, LID_R_IMG]).then(function (textures) {
+  PIXI.Assets.load([CHAR_IMG, DISP_IMG]).then(function (textures) {
     sprite = new PIXI.Sprite(textures[CHAR_IMG]);
     sprite.anchor.set(0.5, 0);
     app.stage.addChild(sprite);
@@ -62,16 +65,9 @@
     app.stage.addChild(dispSprite);
     sprite.filters = [dispFilter];
 
-    // Eyelid overlays
-    lidL = new PIXI.Sprite(textures[LID_L_IMG]);
-    lidL.anchor.set(0, 0);
-    lidL.scale.y = 0; // hidden by default
-    app.stage.addChild(lidL);
-
-    lidR = new PIXI.Sprite(textures[LID_R_IMG]);
-    lidR.anchor.set(0, 0);
-    lidR.scale.y = 0;
-    app.stage.addChild(lidR);
+    // Blink graphics — drawn on top, no displacement
+    blinkGfx = new PIXI.Graphics();
+    app.stage.addChild(blinkGfx);
 
     fitSprite();
     app.ticker.add(animate);
@@ -88,31 +84,12 @@
     sprite.scale.set(scale);
     sprite.x = s.w * 0.55;
     sprite.y = 0;
-
-    // Position eyelids relative to sprite
-    positionLids(scale);
-  }
-
-  function positionLids(scale) {
-    if (!lidL || !lidR || !sprite) return;
-    var tw = sprite.texture.width;
-    var th = sprite.texture.height;
-    var ox = sprite.x - tw * scale * 0.5; // sprite left edge
-
-    lidL.x = ox + leftEye.x * tw * scale;
-    lidL.y = sprite.y + leftEye.y * th * scale;
-    lidL.width = leftEye.w * tw * scale;
-    // height set by blink animation
-
-    lidR.x = ox + rightEye.x * tw * scale;
-    lidR.y = sprite.y + rightEye.y * th * scale;
-    lidR.width = rightEye.w * tw * scale;
   }
 
   function animate(delta) {
     time += delta * 0.016;
-
     var s = getSize();
+    var dt = delta * 0.016;
 
     if (sprite) {
       var tw = sprite.texture.width;
@@ -134,58 +111,50 @@
         sprite.y += (mouseY - s.h / 2) * 0.02;
       }
 
-      // Update eyelid positions to follow sprite
-      positionLids(baseScale * breathX);
-      if (lidL) {
-        lidL.x += drift;
-        lidL.y += bob;
-        if (isHovering) {
-          lidL.x += (mouseX - s.w / 2) * 0.04;
-          lidL.y += (mouseY - s.h / 2) * 0.02;
-        }
+      // Draw blink eyelids
+      blinkTimer += dt;
+      if (blinkPhase === 0 && blinkTimer >= blinkInterval) {
+        blinkPhase = 0.001;
+        blinkTimer = 0;
+        blinkInterval = 3 + Math.random() * 4;
+        if (Math.random() < 0.2) blinkInterval = 0.5; // double blink
       }
-      if (lidR) {
-        lidR.x += drift;
-        lidR.y += bob;
-        if (isHovering) {
-          lidR.x += (mouseX - s.w / 2) * 0.04;
-          lidR.y += (mouseY - s.h / 2) * 0.02;
-        }
-      }
-    }
 
-    // Blink animation
-    blinkTimer += delta * 0.016;
-    if (blinkPhase === 0 && blinkTimer >= blinkInterval) {
-      blinkPhase = 0.001; // start blink
-      blinkTimer = 0;
-      blinkInterval = 3 + Math.random() * 4;
-      // 20% chance of double blink
-      if (Math.random() < 0.2) {
-        blinkInterval = 0.4;
-      }
-    }
-
-    if (blinkPhase > 0) {
-      blinkPhase += delta * 0.016;
-      var t = blinkPhase;
       var closeness = 0;
-      if (t < BLINK_DURATION) {
-        // Closing
-        closeness = t / BLINK_DURATION;
-      } else if (t < BLINK_DURATION * 2) {
-        // Opening
-        closeness = 1 - (t - BLINK_DURATION) / BLINK_DURATION;
-      } else {
-        // Done
-        blinkPhase = 0;
-        closeness = 0;
+      if (blinkPhase > 0) {
+        blinkPhase += dt * BLINK_SPEED;
+        if (blinkPhase < 1) {
+          closeness = blinkPhase; // closing
+        } else if (blinkPhase < 2) {
+          closeness = 2 - blinkPhase; // opening
+        } else {
+          blinkPhase = 0;
+          closeness = 0;
+        }
+        // Ease in/out
+        closeness = closeness * closeness * (3 - 2 * closeness);
       }
 
-      var eyeH_L = leftEye.h * sprite.texture.height * (sprite.scale.y || 1);
-      var eyeH_R = rightEye.h * sprite.texture.height * (sprite.scale.y || 1);
-      if (lidL) lidL.height = eyeH_L * closeness;
-      if (lidR) lidR.height = eyeH_R * closeness;
+      if (blinkGfx) {
+        blinkGfx.clear();
+        if (closeness > 0.01) {
+          var scX = sprite.scale.x;
+          var scY = sprite.scale.y;
+          var ox = sprite.x - tw * scX * 0.5;
+          var oy = sprite.y;
+
+          blinkGfx.beginFill(skinColor, 1);
+          for (var i = 0; i < eyes.length; i++) {
+            var e = eyes[i];
+            var ex = ox + e.x * tw * scX;
+            var ey = oy + e.y * th * scY;
+            var ew = e.w * tw * scX;
+            var eh = e.h * th * scY * closeness;
+            blinkGfx.drawEllipse(ex + ew / 2, ey + eh / 2, ew / 2, eh / 2);
+          }
+          blinkGfx.endFill();
+        }
+      }
     }
 
     // Displacement
