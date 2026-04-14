@@ -1,11 +1,19 @@
-	
-/******************** Data ********************/
-shops = ["道蘊商店", "論劍商店", "諸天商會", "宗門寶庫", "煞海寶箱"];
-bounds = ["人界", "魔界", "煞海"];
-types = ["火", "劍", "雷", "百族"];
-colors = ["text-danger", "text-warning", "text-primary", "text-black"];
+(function() {
+'use strict';
 
-levels = [
+// ===== Constants =====
+var SLOT_COUNT = 6;
+var FRAGMENT_UNIT = 40;
+
+// ===== Game Data =====
+// Level data keys: n=name, f=body fragments (本體殘卷), g=other fragments (仙品殘卷),
+//                  p=purple scrolls (極品殘卷), b=blue scrolls (上品殘卷)
+var shops = ["道蘊商店", "論劍商店", "諸天商會", "宗門寶庫", "煞海寶箱"];
+var bounds = ["人界", "魔界", "煞海"];
+var types = ["火", "劍", "雷", "百族"];
+var colors = ["text-danger", "text-warning", "text-primary", "text-black"];
+
+var levels = [
 	[
 		{n:"無" , f:0  , g:0  , p:0   , b:0   },
 		{n:"1星", f:40 , g:0  , p:0   , b:0   },
@@ -19,7 +27,7 @@ levels = [
 		{n:"地3", f:400, g:240, p:620 , b:1560},
 		{n:"天1", f:480, g:320, p:820 , b:2060},
 		{n:"天2", f:600, g:440, p:1120, b:2810},
-		{n:"天3", f:720, g:560, p:1420, b:3560}], // 人界
+		{n:"天3", f:720, g:560, p:1420, b:3560}],
 	[
 		{n:"無" , f:0   , g:0   , p:0   , b:0    },
 		{n:"1星", f:40  , g:0   , p:0   , b:0    },
@@ -33,7 +41,7 @@ levels = [
 		{n:"地3", f:600 , g:1040, p:2250, b:5500 },
 		{n:"天1", f:800 , g:1360, p:2950, b:7300 },
 		{n:"天2", f:1040, g:1760, p:3750, b:9400 },
-		{n:"天3", f:1320, g:2240, p:4750, b:11800}], // 魔界
+		{n:"天3", f:1320, g:2240, p:4750, b:11800}],
 	[
 		{n:"無" , f:0   , g:0   , p:0   , b:0    },
 		{n:"1星", f:40  , g:0   , p:0   , b:0    },
@@ -47,18 +55,17 @@ levels = [
 		{n:"地3", f:600 , g:2000, p:3100, b:7950 },
 		{n:"天1", f:800 , g:2560, p:4000, b:10150},
 		{n:"天2", f:1040, g:3200, p:5000, b:12650},
-		{n:"天3", f:1320, g:3920, p:6200, b:15450}] // 煞海
+		{n:"天3", f:1320, g:3920, p:6200, b:15450}]
 ];
 
-skills = [
-	// 人界
+var skills = [
 	{id:0, name:"丹朱", shop:0, bound:0, type:0},
 	{id:1, name:"熾炎", shop:1, bound:0, type:0},
 	{id:2, name:"流螢", shop:2, bound:0, type:0},
 	{id:3, name:"隕火", shop:3, bound:0, type:0},
 	{id:4, name:"風捲", shop:0, bound:0, type:0},
 	{id:5, name:"焰羽", shop:1, bound:0, type:0},
-	{id:6, name:"炎舞", shop:2, bound:0, type:0},	
+	{id:6, name:"炎舞", shop:2, bound:0, type:0},
 	{id:7, name:"三味", shop:3, bound:0, type:0},
 	{id:8, name:"折花", shop:0, bound:0, type:1},
 	{id:9, name:"掠影", shop:1, bound:0, type:1},
@@ -76,7 +83,6 @@ skills = [
 	{id:21, name:"驚蟄", shop:1, bound:0, type:2},
 	{id:22, name:"虎鳴", shop:2, bound:0, type:2},
 	{id:23, name:"龍吟", shop:3, bound:0, type:2},
-	// 魔族
 	{id:24, name:"劫焰", shop:0, bound:1, type:0},
 	{id:25, name:"衡陽", shop:1, bound:1, type:0},
 	{id:26, name:"業火", shop:2, bound:1, type:0},
@@ -89,559 +95,529 @@ skills = [
 	{id:33, name:"垂光", shop:1, bound:1, type:2},
 	{id:34, name:"黃龍", shop:2, bound:1, type:2},
 	{id:35, name:"青蛇", shop:3, bound:1, type:2},
-	// 煞海
 	{id:36, name:"烈雨", shop:4, bound:2, type:3},
 	{id:37, name:"冥火", shop:4, bound:2, type:3},
 	{id:38, name:"業蓮", shop:4, bound:2, type:3},
-	{id:39, name:"裂天", shop:4, bound:2, type:3},
+	{id:39, name:"裂天", shop:4, bound:2, type:3}
 ];
 
-/******************** Core Compute & Default View ********************/
+// ===== Application State =====
+var source, frags, fragp, fragb, target;
+// Shared between #stbl click handler (sets) and #ssub click handler (reads)
+var currentSourceIdx;
+// Shared between panel open handlers and their submit handlers
+var sourceOffcanvas, targetOffcanvas;
 
-function updatedatadone() {
-	window.location.href = '?' + encodeURIComponent(JSON.stringify({'source':source, 'frags':frags,'fragp':fragp,'fragb':fragb,'target':target}));
-}
+// ===== URL Data Validation =====
+function validateUrlData(data) {
+	if (!data || typeof data !== 'object') return false;
+	if (!Array.isArray(data.source) || data.source.length !== SLOT_COUNT) return false;
+	if (!Array.isArray(data.frags)) return false;
+	if (typeof data.fragp !== 'number' || data.fragp < 0) return false;
+	if (typeof data.fragb !== 'number' || data.fragb < 0) return false;
+	if (!Array.isArray(data.target) || data.target.length !== SLOT_COUNT) return false;
 
-function refreshdata() {
-	d = '';
-	try {
-		d = JSON.parse(decodeURIComponent(window.location.search.substring(1)));
-	} catch (e) {
+	for (var i = 0; i < SLOT_COUNT; i++) {
+		var s = data.source[i];
+		if (!s || typeof s.id !== 'number' || s.id < 0 || s.id >= skills.length) return false;
+		var sk = skills[s.id];
+		if (typeof s.level !== 'number' || s.level < 0 || s.level >= levels[sk.bound].length) return false;
+		if (!Array.isArray(s.src)) return false;
+		for (var j = 0; j < s.src.length; j++) {
+			var frag = s.src[j];
+			if (!frag || typeof frag.id !== 'number' || frag.id < 0 || frag.id >= skills.length) return false;
+			if (typeof frag.amount !== 'number' || frag.amount <= 0) return false;
+		}
 	}
 
-	if (d.source != undefined && d.frags != undefined && d.fragp != undefined && d.fragb != undefined && d.target != undefined) {
-		source = d.source;
-		frags = d.frags;
-		fragp = d.fragp;
-		fragb = d.fragb;
-		target = d.target;
+	for (var i = 0; i < data.frags.length; i++) {
+		var frag = data.frags[i];
+		if (!frag || typeof frag.id !== 'number' || frag.id < 0 || frag.id >= skills.length) return false;
+		if (typeof frag.amount !== 'number' || frag.amount <= 0) return false;
+	}
+
+	for (var i = 0; i < SLOT_COUNT; i++) {
+		var t = data.target[i];
+		if (!t || typeof t.id !== 'number' || t.id < 0 || t.id >= skills.length) return false;
+		var sk = skills[t.id];
+		if (typeof t.level !== 'number' || t.level < 1 || t.level >= levels[sk.bound].length) return false;
+	}
+
+	return true;
+}
+
+// ===== State Persistence =====
+function updatedatadone() {
+	window.location.href = '?' + encodeURIComponent(JSON.stringify({
+		source: source, frags: frags, fragp: fragp, fragb: fragb, target: target
+	}));
+}
+
+// ===== Data Loading =====
+function refreshdata() {
+	var data = null;
+	try {
+		data = JSON.parse(decodeURIComponent(window.location.search.substring(1)));
+	} catch (e) {
+		// Invalid or empty URL params — fall through to defaults
+	}
+
+	if (data !== null && validateUrlData(data)) {
+		source = data.source;
+		frags = data.frags;
+		fragp = data.fragp;
+		fragb = data.fragb;
+		target = data.target;
 	} else {
 		source = JSON.parse('[{"id":29,"level":5,"src":[{"id":18,"amount":80},{"id":22,"amount":120},{"id":31,"amount":40},{"id":34,"amount":40},{"id":37,"amount":40}],"sm":{}},{"id":26,"level":5,"src":[{"id":8,"amount":40},{"id":10,"amount":120},{"id":18,"amount":80},{"id":20,"amount":40},{"id":39,"amount":40}]},{"id":28,"level":7,"src":[{"id":0,"amount":80},{"id":8,"amount":40},{"id":10,"amount":240},{"id":15,"amount":40},{"id":19,"amount":40},{"id":20,"amount":40},{"id":21,"amount":40},{"id":30,"amount":40},{"id":31,"amount":40}]},{"id":1,"level":7,"src":[{"id":23,"amount":40},{"id":36,"amount":40},{"id":37,"amount":40}]},{"id":9,"level":10,"src":[{"id":23,"amount":40},{"id":26,"amount":80},{"id":28,"amount":200}]},{"id":11,"level":12,"src":[{"id":2,"amount":40},{"id":19,"amount":160},{"id":27,"amount":40},{"id":31,"amount":80},{"id":37,"amount":80},{"id":38,"amount":40},{"id":39,"amount":120}]}]');
 		frags = JSON.parse('[{"id":8,"amount":160},{"id":9,"amount":40},{"id":26,"amount":40},{"id":29,"amount":80},{"id":35,"amount":40}]');
 		fragp = 110;
 		fragb = 445;
 		target = JSON.parse('[{"id":26,"level":6},{"id":34,"level":6},{"id":20,"level":10},{"id":1,"level":6},{"id":32,"level":6},{"id":35,"level":7}]');
-/*
-		source = [
-			{id:29, level:5, src:[
-				{id:31, amount: 40},
-				{id:18, amount: 80},
-				{id:34, amount: 40},
-				{id:22, amount: 120},
-				{id:37, amount: 40},
-			]},
-			{id:26, level:5, src:[
-				{id:10, amount: 120},
-				{id:18, amount: 80},
-				{id:20, amount: 40},
-				{id:8, amount: 40},
-				{id:31, amount: 40},
-			]},
-			{id:28, level:7, src:[
-				{id:0, amount: 80},
-				{id:10, amount: 240},
-				{id:8, amount: 40},
-				{id:31, amount: 40},
-				{id:30, amount: 40},
-				{id:19, amount: 40},
-				{id:18, amount: 40},
-				{id:21, amount: 40},
-				{id:20, amount: 40},
-			]},
-			{id:1, level:7, src:[
-				{id:19, amount: 40},
-				{id:37, amount: 40},
-				{id:36, amount: 40}
-			]},
-			{id:9, level:10, src:[
-				{id:26, amount: 120},
-				{id:28, amount: 200},
-			]},
-			{id:11, level:12, src:[
-				{id:27, amount: 40},
-				{id:15, amount: 40},
-				{id:31, amount: 80},
-				{id:19, amount: 160},
-				{id:37, amount: 80},
-				{id:38, amount: 40},
-				{id:39, amount: 120},
-			]},
-		];
-
-		frags = [
-			{id:29, amount: 80},
-			{id:26, amount: 40},
-			{id:8, amount: 160},
-			{id:9, amount: 40},
-		]
-		fragp = 110;
-		fragb = 445;
-
-		target = [
-			{id:11, level:10},
-			{id:26, level:6},
-			{id:10, level:10},
-			{id:1, level:6} ,
-			{id:9, level:11},
-			{id:11, level:12},
-		]
-			*/
 	}
 }
 
+// ===== View: Source Powers Table =====
 function refreshsourcepowerview() {
-	// load source power
-	a = 0, b = 0, c = fragp, d = fragb;
-	for (i = 0; i < 6; i++) {
-		sk = skills[source[i].id];
-		lv = levels[sk.bound][source[i].level];
-		$('#sname' + i)[0].innerText = sk.name;
-		colors.forEach(function(it) {
-			$('#sname' + i).removeClass(it);
-		});
-		$('#sname' + i).addClass(colors[sk.type]);
-		$('#slevel' + i)[0].innerText = lv.n;
-		$('#ssrc1' + i)[0].innerHTML = lv.f - 40;
-		a += lv.f - 40;
+	var totalBody = 0;
+	var totalOther = 0;
+	var totalPurple = fragp;
+	var totalBlue = fragb;
+
+	for (var i = 0; i < SLOT_COUNT; i++) {
+		var skill = skills[source[i].id];
+		var levelData = levels[skill.bound][source[i].level];
+
+		$('#sname' + i)[0].innerText = skill.name;
+		colors.forEach(function(c) { $('#sname' + i).removeClass(c); });
+		$('#sname' + i).addClass(colors[skill.type]);
+
+		$('#slevel' + i)[0].innerText = levelData.n;
+
+		var bodyFragCount = levelData.f - FRAGMENT_UNIT;
+		$('#ssrc1' + i)[0].innerHTML = bodyFragCount;
+		totalBody += bodyFragCount;
+
 		$('#ssrc2' + i)[0].innerHTML = '';
-		for (j = 0; j < source[i].src.length; j++) {
+		for (var j = 0; j < source[i].src.length; j++) {
 			$('#ssrc2' + i)[0].innerHTML += skills[source[i].src[j].id].name + "(" + source[i].src[j].amount + ") ";
-			b += source[i].src[j].amount;
-			if ((j + 1) % 3 == 0)
+			totalOther += source[i].src[j].amount;
+			if ((j + 1) % 3 === 0) {
 				$('#ssrc2' + i)[0].innerHTML += "<br/>";
+			}
 		}
-		$('#ssrc3' + i)[0].innerHTML = lv.p;
-		c += lv.p;
-		$('#ssrc4' + i)[0].innerHTML = lv.b;
-		d += lv.b;
+
+		$('#ssrc3' + i)[0].innerHTML = levelData.p;
+		totalPurple += levelData.p;
+		$('#ssrc4' + i)[0].innerHTML = levelData.b;
+		totalBlue += levelData.b;
 	}
-	frags.forEach(function(it) {
-		b += it.amount;
-	});
+
+	frags.forEach(function(item) { totalOther += item.amount; });
+
 	$('#ssrc28')[0].innerHTML = '';
-	frags.forEach(function(i) {
-		$('#ssrc28')[0].innerHTML += skills[i.id].name + "(" + i.amount + ") ";
+	frags.forEach(function(item) {
+		$('#ssrc28')[0].innerHTML += skills[item.id].name + "(" + item.amount + ") ";
 	});
+
 	$('#ssrc38')[0].innerHTML = fragp;
 	$('#ssrc48')[0].innerHTML = fragb;
-	$('#ssrc17')[0].innerHTML = a;
-	$('#ssrc27')[0].innerHTML = b;
-	$('#ssrc37')[0].innerHTML = c;
-	$('#ssrc47')[0].innerHTML = d;
+	$('#ssrc17')[0].innerHTML = totalBody;
+	$('#ssrc27')[0].innerHTML = totalOther;
+	$('#ssrc37')[0].innerHTML = totalPurple;
+	$('#ssrc47')[0].innerHTML = totalBlue;
 }
 
+// ===== View: Target Powers Table =====
 function refreshtargetpowerview() {
-	a = b = c = d = 0;
-	for (i = 0; i < 6; i++) {
-		sk = skills[target[i].id];
-		lv = levels[sk.bound][target[i].level];
-		$('#tname' + i)[0].innerText = sk.name;
-		colors.forEach(function(it) {
-			$('#tname' + i).removeClass(it);
-		});
-		$('#tname' + i).addClass(colors[sk.type]);
-		$('#tlevel' + i)[0].innerText = lv.n;
-		$('#tsrc1' + i)[0].innerText = lv.f - 40;
-		a += lv.f - 40;
-		$('#tsrc2' + i)[0].innerText = lv.g;
-		b += lv.g;
-		$('#tsrc3' + i)[0].innerText = lv.p;
-		c += lv.p;
-		$('#tsrc4' + i)[0].innerText = lv.b;
-		d += lv.b;
+	var totalBody = 0;
+	var totalOther = 0;
+	var totalPurple = 0;
+	var totalBlue = 0;
+
+	for (var i = 0; i < SLOT_COUNT; i++) {
+		var skill = skills[target[i].id];
+		var levelData = levels[skill.bound][target[i].level];
+
+		$('#tname' + i)[0].innerText = skill.name;
+		colors.forEach(function(c) { $('#tname' + i).removeClass(c); });
+		$('#tname' + i).addClass(colors[skill.type]);
+
+		$('#tlevel' + i)[0].innerText = levelData.n;
+
+		var bodyFragCount = levelData.f - FRAGMENT_UNIT;
+		$('#tsrc1' + i)[0].innerText = bodyFragCount;
+		totalBody += bodyFragCount;
+
+		$('#tsrc2' + i)[0].innerText = levelData.g;
+		totalOther += levelData.g;
+		$('#tsrc3' + i)[0].innerText = levelData.p;
+		totalPurple += levelData.p;
+		$('#tsrc4' + i)[0].innerText = levelData.b;
+		totalBlue += levelData.b;
 	}
-	$('#tsrc17')[0].innerHTML = a;
-	$('#tsrc27')[0].innerHTML = b;
-	$('#tsrc37')[0].innerHTML = c;
-	$('#tsrc47')[0].innerHTML = d;
+
+	$('#tsrc17')[0].innerHTML = totalBody;
+	$('#tsrc27')[0].innerHTML = totalOther;
+	$('#tsrc37')[0].innerHTML = totalPurple;
+	$('#tsrc47')[0].innerHTML = totalBlue;
 }
 
+// ===== Core Computation =====
 function computesuperpower() {
-	tg = 0;
-	tp = 0;
-	tb = 0;
+	var totalGold = 0;
+	var totalPurple = 0;
+	var totalBlue = 0;
 
-	strch = '', strlk = '', strrm = '';
-	// 1.1. 统计碎片(金)
-	sm = new Map();
-	for (i = 0; i < frags.length; i++) {
-		if (sm.get(frags[i].id) == undefined)
-			sm.set(frags[i].id, 0);
-		sm.set(frags[i].id, sm.get(frags[i].id) + frags[i].amount);
-		tg += frags[i].amount;
+	// Phase 1: Tally all available fragments
+	var fragmentMap = new Map();
+	for (var i = 0; i < frags.length; i++) {
+		if (!fragmentMap.has(frags[i].id)) fragmentMap.set(frags[i].id, 0);
+		fragmentMap.set(frags[i].id, fragmentMap.get(frags[i].id) + frags[i].amount);
+		totalGold += frags[i].amount;
 	}
-	// 1.2. 统计现有神通
-	for (i = 0; i < 6; i++) {
-		sk = skills[source[i].id];
-		lv = levels[sk.bound][source[i].level];
-		if (sm.get(sk.id) == undefined)
-			sm.set(sk.id, 0);
-		sm.set(sk.id, sm.get(sk.id) + lv.f - 40);
-		tg += lv.f - 40;
-		tp += lv.p;
-		tb += lv.b;
-		for (j = 0; j < source[i].src.length; j++) {
-			if (sm.get(source[i].src[j].id) == undefined)
-				sm.set(source[i].src[j].id, 0);
-			sm.set(source[i].src[j].id, sm.get(source[i].src[j].id) + source[i].src[j].amount);
-			tg += source[i].src[j].amount;
+	for (var i = 0; i < SLOT_COUNT; i++) {
+		var skill = skills[source[i].id];
+		var levelData = levels[skill.bound][source[i].level];
+		if (!fragmentMap.has(skill.id)) fragmentMap.set(skill.id, 0);
+		fragmentMap.set(skill.id, fragmentMap.get(skill.id) + levelData.f - FRAGMENT_UNIT);
+		totalGold += levelData.f - FRAGMENT_UNIT;
+		totalPurple += levelData.p;
+		totalBlue += levelData.b;
+		for (var j = 0; j < source[i].src.length; j++) {
+			var srcFrag = source[i].src[j];
+			if (!fragmentMap.has(srcFrag.id)) fragmentMap.set(srcFrag.id, 0);
+			fragmentMap.set(srcFrag.id, fragmentMap.get(srcFrag.id) + srcFrag.amount);
+			totalGold += srcFrag.amount;
 		}
 	}
-	// 2.1. 估算需要的神通本体
-	tmptgt = JSON.parse(JSON.stringify(target));
-	
-	tmptgt.forEach(function(it) {
-		sk = skills[it.id];
-		lv = levels[sk.bound][it.level];
-		it.body = lv.f - 40;
-		it.frag = lv.g;
-		it.purple = lv.p;
-		it.blue = lv.b;
-		if (sm.get(it.id) != undefined) {
-			used = Math.min(sm.get(it.id), it.body);
-			sm.set(it.id, sm.get(it.id) - used);
-			it.body -= used;
-			tg -= used;
+
+	// Phase 2: Calculate target needs and allocate same-skill body fragments
+	var targetNeeds = JSON.parse(JSON.stringify(target));
+	targetNeeds.forEach(function(item) {
+		var skill = skills[item.id];
+		var levelData = levels[skill.bound][item.level];
+		item.body = levelData.f - FRAGMENT_UNIT;
+		item.frag = levelData.g;
+		item.purple = levelData.p;
+		item.blue = levelData.b;
+		if (fragmentMap.has(item.id)) {
+			var used = Math.min(fragmentMap.get(item.id), item.body);
+			fragmentMap.set(item.id, fragmentMap.get(item.id) - used);
+			item.body -= used;
+			totalGold -= used;
 		}
 	});
-	// 2.2. 估算神通碎片 (目标神通)
-	t = 0;
-	tmptgt.forEach(function(it) {
-		sk = skills[it.id];
-		sm.forEach (function(v, k) {
-			if (it.body == 0)
-				return;
-			if (v > 0 && it.id != k && skills[k].shop == sk.shop) {
-				used = Math.min(it.body, v);
-				strch += skills[k].name + " x" + (used / 40) + " 轉換 " + skills[it.id].name + "<br />";
-				t += used / 40;
-				sm.set(k, sm.get(k) - used);
-				it.body -= used;
-				tg -= used;
-			}	
-		});
-	});
-	strch += "共轉換 " + t + " 次<br />";
-	// 2.3. 估算神通碎片 (非目标神通)
-	tmptgt.forEach(function(it) {
-		sk = skills[it.id];
-		sm.forEach (function(v, k) {// 懒得优化先用平方复杂度的僕素做法Orz
-			if (it.frag == 0)
-				return;
-			if (v > 0) {
-				used = Math.min(it.frag, v);
-				sm.set(k, sm.get(k) - used);
-				it.frag -= used;
-				tg -= used;
+
+	// Phase 3: Convert same-shop fragments to fill remaining body needs
+	var conversionHtml = '';
+	var conversionCount = 0;
+	targetNeeds.forEach(function(item) {
+		var skill = skills[item.id];
+		fragmentMap.forEach(function(amount, fragId) {
+			if (item.body === 0) return;
+			if (amount > 0 && item.id !== fragId && skills[fragId].shop === skill.shop) {
+				var used = Math.min(item.body, amount);
+				conversionHtml += skills[fragId].name + " x" + (used / FRAGMENT_UNIT) + " 轉換 " + skills[item.id].name + "<br />";
+				conversionCount += used / FRAGMENT_UNIT;
+				fragmentMap.set(fragId, fragmentMap.get(fragId) - used);
+				item.body -= used;
+				totalGold -= used;
 			}
 		});
-		if (it.purple > 0) {
-			used = Math.min(it.purple, tp);
-			it.purple -= used;
-			tp -= used;
+	});
+	conversionHtml += "共轉換 " + conversionCount + " 次<br />";
+
+	// Phase 4: Allocate remaining fragments for generic needs, then purple/blue scrolls
+	targetNeeds.forEach(function(item) {
+		fragmentMap.forEach(function(amount, fragId) {
+			if (item.frag === 0) return;
+			if (amount > 0) {
+				var used = Math.min(item.frag, amount);
+				fragmentMap.set(fragId, fragmentMap.get(fragId) - used);
+				item.frag -= used;
+				totalGold -= used;
+			}
+		});
+		if (item.purple > 0) {
+			var used = Math.min(item.purple, totalPurple);
+			item.purple -= used;
+			totalPurple -= used;
 		}
-		if (it.blue > 0) {
-			used = Math.min(it.blue, tb);
-			it.blue -= used;
-			tb -= used;
+		if (item.blue > 0) {
+			var used = Math.min(item.blue, totalBlue);
+			item.blue -= used;
+			totalBlue -= used;
 		}
 	});
-	// 3 更新结果
-	b = c = d = 0;
-	tmptgt.forEach(function(it) {
-		if (it.body > 0) {
-			strlk += "缺少 " + skills[it.id].name + "(" + it.body + ")<br />";
+
+	// Phase 5: Build result HTML
+	var missingOther = 0;
+	var missingPurple = 0;
+	var missingBlue = 0;
+	var deficitHtml = '';
+	targetNeeds.forEach(function(item) {
+		if (item.body > 0) {
+			deficitHtml += "缺少 " + skills[item.id].name + "(" + item.body + ")<br />";
 		}
-		if (it.frag > 0)
-			b += it.frag;
-		if (it.purple > 0)
-			c += it.purple;
-		if (it.blue > 0)
-			d += it.blue;
-		console.log(skills[it.id].name, it.body, it.frag, it.purple, it.blue);
+		if (item.frag > 0) missingOther += item.frag;
+		if (item.purple > 0) missingPurple += item.purple;
+		if (item.blue > 0) missingBlue += item.blue;
 	});
-	strlk += "缺少仙品殘卷: " + b + "<br />";
-	strlk += "缺少極品殘卷: " + c + "<br />";
-	strlk += "缺少上品殘卷: " + d + "<br />";
-	console.log("================================================");
-	strrm += "剩餘仙品殘卷: " + tg + "<br />";
-	sm.forEach (function(v, k) {
-		if (v > 0) {
-			console.log(k, v);
-			strrm += " - " + skills[k].name + "(" + v + ")<br/>";
+	deficitHtml += "缺少仙品殘卷: " + missingOther + "<br />";
+	deficitHtml += "缺少極品殘卷: " + missingPurple + "<br />";
+	deficitHtml += "缺少上品殘卷: " + missingBlue + "<br />";
+
+	var remainderHtml = "剩餘仙品殘卷: " + totalGold + "<br />";
+	fragmentMap.forEach(function(amount, fragId) {
+		if (amount > 0) {
+			remainderHtml += " - " + skills[fragId].name + "(" + amount + ")<br/>";
 		}
 	});
-	strrm += "剩餘極品殘卷: " + tp + "<br />";
-	strrm += "剩餘上品殘卷:  " + tb + "<br />";
-	
-	$('#tsum')[0].innerHTML = strch + "<br />" + strlk + "<br />" + strrm;
-	
-	//$('#tst')[0].value = '?' + encodeURIComponent(JSON.stringify({'source':source, 'frags':frags,'fragp':fragp,'fragb':fragb,'target':target}));
+	remainderHtml += "剩餘極品殘卷: " + totalPurple + "<br />";
+	remainderHtml += "剩餘上品殘卷:  " + totalBlue + "<br />";
+
+	$('#tsum')[0].innerHTML = conversionHtml + "<br />" + deficitHtml + "<br />" + remainderHtml;
 }
 
-/******************** Input Processing ********************/
+// ===== Shared UI: Shop Skill Selector Grid =====
+function buildShopSelector(fragmentMap, disabledSkillId, minusFn, plusFn, spanPrefix) {
+	var sortedSkills = JSON.parse(JSON.stringify(skills));
+	sortedSkills.sort(function(a, b) {
+		if (a.shop === b.shop && a.bound === b.bound && a.type === b.type) return a.id - b.id;
+		if (a.shop === b.shop && a.bound === b.bound) return a.type - b.type;
+		if (a.shop === b.shop) return a.bound - b.bound;
+		return a.shop - b.shop;
+	});
 
-// 选择目标神通画面 - 打开
-$('#ttbl > tbody > tr').on('click', function (e) {
-	for (i = 0; i < 6; i++) {
+	var html = '<div class="row">';
+	for (var i = 0; i < sortedSkills.length; i += 9) {
+		html += '<div class="col col-md-6 px-2 mx-0 my-1 border align-start" style="min-width:120px; background-color: rgba(255, 255, 255, 0.9);">';
+		html += '<h6 class="my-1">' + shops[sortedSkills[i].shop] + ' </h6><hr class="divider my-2">';
+		for (var j = i; j < Math.min(i + 9, sortedSkills.length); j++) {
+			var skillId = sortedSkills[j].id;
+			var amount = fragmentMap.has(skillId) ? fragmentMap.get(skillId) : "";
+			var isDisabled = (disabledSkillId === skillId);
+			var disabledAttr = isDisabled ? " disabled" : "";
+			if (isDisabled) {
+				amount = levels[skills[disabledSkillId].bound][source[currentSourceIdx].level].f - FRAGMENT_UNIT;
+			}
+			html += '<p id="src' + skillId + '" class="text-start mb-1">';
+			html += '<span class=' + colors[sortedSkills[j].type] + '>' + sortedSkills[j].name + '</span>';
+			html += ' <button onclick="' + minusFn + '(' + skillId + ')"' + disabledAttr + '>-</button>';
+			html += '<button onclick="' + plusFn + '(' + skillId + ')"' + disabledAttr + '>+</button>';
+			html += ' <span id="' + spanPrefix + skillId + '" class="badge text-bg-secondary">' + amount + '</span>';
+		}
+		html += '</div>';
+	}
+	html += '</div>';
+	return html;
+}
+
+// ===== Submit Button State =====
+function refreshspsrcbtn() {
+	$('#ssub').prop('disabled', Number($('#ssrccnt')[0].innerHTML) !== 0);
+}
+
+// ===== Source Power Selection Handlers =====
+function sponchanged() {
+	var id = $('#sl1')[0].value;
+	var lv = $('#sll1')[0].value;
+	colors.forEach(function(c) { $('#sl1').removeClass(c); });
+	$('#sl1').addClass(colors[skills[id].type]);
+
+	for (var i = 0; i < skills.length; i++) {
+		$('#sr' + i)[0].innerHTML = '';
+	}
+	$('#ssshop button').prop('disabled', false);
+	$('#src' + id + ' button').prop('disabled', true);
+	$('#sr' + id)[0].innerHTML = levels[skills[id].bound][lv].f - FRAGMENT_UNIT;
+	$('#ssrccnt')[0].innerHTML = levels[skills[id].bound][lv].g;
+	refreshspsrcbtn();
+}
+
+function slonchanged() {
+	var id = $('#sl1')[0].value;
+	var lv = $('#sll1')[0].value;
+	$('#sr' + id)[0].innerHTML = levels[skills[id].bound][lv].f - FRAGMENT_UNIT;
+	var total = 0;
+	for (var i = 0; i < skills.length; i++) {
+		total += Number($('#sr' + i)[0].innerHTML);
+	}
+	$('#ssrccnt')[0].innerHTML = levels[skills[id].bound][lv].g - (total - (levels[skills[id].bound][lv].f - FRAGMENT_UNIT));
+	refreshspsrcbtn();
+}
+
+function sronminus(v) {
+	var val = Number($('#sr' + v)[0].innerHTML);
+	if (val > 0) {
+		$('#sr' + v)[0].innerHTML = val - FRAGMENT_UNIT;
+		var sv = Number($('#ssrccnt')[0].innerHTML);
+		$('#ssrccnt')[0].innerHTML = sv + FRAGMENT_UNIT;
+	}
+	refreshspsrcbtn();
+}
+
+function sronplus(v) {
+	$('#sr' + v)[0].innerHTML = Number($('#sr' + v)[0].innerHTML) + FRAGMENT_UNIT;
+	$('#ssrccnt')[0].innerHTML = Number($('#ssrccnt')[0].innerHTML) - FRAGMENT_UNIT;
+	refreshspsrcbtn();
+}
+
+// ===== Fragment Selection Handlers =====
+function sfonminus(v) {
+	var val = Number($('#sf' + v)[0].innerHTML);
+	if (val > 0) {
+		$('#sf' + v)[0].innerHTML = val - FRAGMENT_UNIT;
+	}
+}
+
+function sfonplus(v) {
+	$('#sf' + v)[0].innerHTML = Number($('#sf' + v)[0].innerHTML) + FRAGMENT_UNIT;
+}
+
+// ===== Target Selection Handler =====
+function tponchanged(i) {
+	var skillId = Number($('#tl' + i)[0].value);
+	colors.forEach(function(c) { $('#tl' + i).removeClass(c); });
+	$('#tl' + i).addClass(colors[skills[skillId].type]);
+}
+
+// ===== Expose onclick handlers to window =====
+window.sponchanged = sponchanged;
+window.slonchanged = slonchanged;
+window.sronminus = sronminus;
+window.sronplus = sronplus;
+window.sfonminus = sfonminus;
+window.sfonplus = sfonplus;
+window.tponchanged = tponchanged;
+
+// ===== jQuery Event Bindings =====
+
+// Target table row click — open target selection panel
+$('#ttbl > tbody > tr').on('click', function() {
+	for (var i = 0; i < SLOT_COUNT; i++) {
 		$('#tl' + i)[0].innerHTML = '';
-		colors.forEach(function(it) {
-			$('#tl' + i).removeClass(it);
-		});
+		colors.forEach(function(c) { $('#tl' + i).removeClass(c); });
 		$('#tl' + i).addClass(colors[skills[target[i].id].type]);
-		skills.forEach(function(it) {
-			sk = skills[it.id];
-			issel = target[i].id == sk.id;
-			name = sk.name + (sk.bound ? " (魔)" : "");		
-			$('#tl' + i)[0].innerHTML += "<option class='" + colors[sk.type] + "' value='" + it.id + "'" + (issel ? "selected" : "") + ">" + name + "</option>";
+		skills.forEach(function(sk) {
+			var isSelected = (target[i].id === sk.id);
+			var displayName = sk.name + (sk.bound ? " (魔)" : "");
+			$('#tl' + i)[0].innerHTML += "<option class='" + colors[sk.type] + "' value='" + sk.id + "'" + (isSelected ? "selected" : "") + ">" + displayName + "</option>";
 		});
 		$('#tll' + i)[0].innerHTML = '';
-		sk = skills[target[i].id];
-		for (j = 1; j < levels[sk.bound].length; j++) {
-			lv = levels[sk.bound][source[i].level];
-			issel = j == target[i].level;
-			$('#tll' + i)[0].innerHTML += "<option value='" + j + "'" + (issel ? "selected" : "") + ">" + levels[sk.bound][j].n + "</option>";
+		var skill = skills[target[i].id];
+		for (var j = 1; j < levels[skill.bound].length; j++) {
+			var isSelected = (j === target[i].level);
+			$('#tll' + i)[0].innerHTML += "<option value='" + j + "'" + (isSelected ? "selected" : "") + ">" + levels[skill.bound][j].n + "</option>";
 		}
 	}
-	bsOffcanvas = new bootstrap.Offcanvas('#tsel');
-	bsOffcanvas.show();
+	targetOffcanvas = new bootstrap.Offcanvas('#tsel');
+	targetOffcanvas.show();
 });
 
-// 选择目标神通画面 - 完成
-$('#tsub').on('click', function(e) {
-	for (i = 0; i < 6; i++) {
+// Target submit
+$('#tsub').on('click', function() {
+	for (var i = 0; i < SLOT_COUNT; i++) {
 		target[i].id = Number($('#tl' + i)[0].value);
 		target[i].level = Number($('#tll' + i)[0].value);
 	}
 	refreshtargetpowerview();
 	computesuperpower();
-	bsOffcanvas.hide();
+	targetOffcanvas.hide();
 	updatedatadone();
 });
 
-// 选择目標神通画面 - 選擇改變
-function tponchanged(i) {
-	j = Number($('#tl' + i)[0].value);
-	colors.forEach(function(it) {
-		$('#tl' + i).removeClass(it);
-	});
-	$('#tl' + i).addClass(colors[skills[j].type]);
-}
+// Source table row click — open source selection panel
+$('#stbl > tbody > tr').on('click', function(e) {
+	var targetId = e.target.id;
+	currentSourceIdx = targetId[targetId.length - 1];
 
-// 选择现有神通画面 - 打开
-$('#stbl > tbody > tr').on('click', function (e) {
-	oid = e.target.id;
-	idx = oid[oid.length - 1];
 	$('#sl1')[0].innerHTML = '';
-	colors.forEach(function(it) {
-		$('#sl1').removeClass(it);
+	colors.forEach(function(c) { $('#sl1').removeClass(c); });
+	$('#sl1').addClass(colors[skills[source[currentSourceIdx].id].type]);
+	skills.forEach(function(sk) {
+		var isSelected = (source[currentSourceIdx].id === sk.id);
+		var displayName = sk.name + (sk.bound ? " (魔)" : "");
+		$('#sl1')[0].innerHTML += "<option class='" + colors[sk.type] + "' value='" + sk.id + "'" + (isSelected ? "selected" : "") + ">" + displayName + "</option>";
 	});
-	$('#sl1').addClass(colors[skills[source[idx].id].type]);
-	skills.forEach(function(it) {
-		sk = skills[it.id];
-		issel = source[idx].id == sk.id;
-		name = sk.name + (sk.bound ? " (魔)" : "");		
-		$('#sl1')[0].innerHTML += "<option class='" + colors[sk.type] + "' value='" + it.id + "'" + (issel ? "selected" : "") + ">" + name + "</option>";
-	});
+
 	$('#sll1')[0].innerHTML = '';
-	sk = skills[source[idx].id];
-	for (j = 1; j < levels[sk.bound].length; j++) {
-		lv = levels[sk.bound][source[idx].level];
-		issel = j == source[idx].level;
-		$('#sll1')[0].innerHTML += "<option value='" + j + "'" + (issel ? "selected" : "") + ">" + levels[sk.bound][j].n + "</option>";
+	var skill = skills[source[currentSourceIdx].id];
+	for (var j = 1; j < levels[skill.bound].length; j++) {
+		var isSelected = (j === source[currentSourceIdx].level);
+		$('#sll1')[0].innerHTML += "<option value='" + j + "'" + (isSelected ? "selected" : "") + ">" + levels[skill.bound][j].n + "</option>";
 	}
-	sm = new Map();
-	source[idx].src.forEach(function(it) {
-		sm.set(it.id, it.amount);
+
+	var srcFragMap = new Map();
+	source[currentSourceIdx].src.forEach(function(item) {
+		srcFragMap.set(item.id, item.amount);
 	});
 	$('#ssrccnt')[0].innerText = 0;
 
-	// 显示现有神通材料选择画面
-	sks = tmptgt = JSON.parse(JSON.stringify(skills));
-	sks.sort(function(a, b) {
-		if (a.shop == b.shop && a.bound == b.bound && a.type == b.type)
-			return a.id - b.id;
-		if (a.shop == b.shop && a.bound == b.bound)
-			return a.type - b.type;
-		if (a.shop == b.shop)
-			return a.bound - b.bound;
-		return a.shop - b.shop;
-	});
-	strhtml = '<div class="row">';
-	for (i = 0; i < sks.length; i+=9) {
-		strhtml += '<div class="col col-md-6 px-2 mx-0 my-1 border align-start" style="min-width:120px; background-color: rgba(255, 255, 255, 0.9);"><h6 class="my-1">' + shops[sks[i].shop] + ' ' + '</h6><hr class="divider my-2">';
-		for (j = i; j < Math.min(i + 9, sks.length); j++) {
-			amount = sm.get(sks[j].id) == undefined ? "" : sm.get(sks[j].id);
-			isdis = source[idx].id == sks[j].id ? " disabled" : "";
-			if (isdis)
-				amount = levels[skills[source[idx].id].bound][source[idx].level].f - 40;
-			strhtml += '<p id="src' + sks[j].id + '" class="text-start mb-1"><span class=' + colors[sks[j].type] + '>' + sks[j].name + '</span>';
-			strhtml += ' <button onclick="sronminus(' +  + sks[j].id + ')"' + isdis + '>-</button><button onclick="sronplus(' +  + sks[j].id + ')"' + isdis + '>+</button>';
-			strhtml += ' <span id="sr' + sks[j].id + '" class="badge text-bg-secondary">' + amount + '</span>';
-		}
-		strhtml += '</div>';
-	}
-	strhtml += '</div>';
-	$('#ssshop')[0].innerHTML = strhtml;
+	$('#ssshop')[0].innerHTML = buildShopSelector(
+		srcFragMap, source[currentSourceIdx].id, 'sronminus', 'sronplus', 'sr'
+	);
 
-	// 最后打开画面
-	bsOffcanvas0 = new bootstrap.Offcanvas('#ssel');
-	bsOffcanvas0.show();
+	sourceOffcanvas = new bootstrap.Offcanvas('#ssel');
+	sourceOffcanvas.show();
 });
 
-// 更新送出按钮 (选择现有神通画面)
-function refreshspsrcbtn() {
-	$('#ssub').prop('disabled', Number($('#ssrccnt')[0].innerHTML) != 0);
-}
-
-// 选择现有神通画面 - 改變选择
-function sponchanged() {
-	// 修改顏色
-	id = $('#sl1')[0].value;
-	lv = $('#sll1')[0].value;
-	colors.forEach(function(it) {
-		$('#sl1').removeClass(it);
-	});
-	console.log(colors[skills[id].type]);
-	$('#sl1').addClass(colors[skills[id].type]);
-	// 清除材料
-	for (i = 0; i < 40; i++)
-		$('#sr' + i)[0].innerHTML = '';
-	// 禁用启用本体选择
-	$('#ssshop button').prop('disabled', false);
-	$('#src' + id + ' button').prop('disabled', true);
-	// 更新本体, 剩余数量
-	$('#sr' + id)[0].innerHTML = levels[skills[id].bound][lv].f - 40;
-	$('#ssrccnt')[0].innerHTML = levels[skills[id].bound][lv].g;
-	
-	refreshspsrcbtn();
-}
-// 选择现有神通画面 - 选择等级
-function slonchanged() {
-	id = $('#sl1')[0].value;
-	lv = $('#sll1')[0].value;
-	// 更新本体数量
-	$('#sr' + id)[0].innerHTML = levels[skills[id].bound][lv].f - 40;
-	// 更新剩余数量
-	a = 0;
-	for (i = 0; i < 40; i++)
-		a += new Number($('#sr' + i)[0].innerHTML);	
-	$('#ssrccnt')[0].innerHTML = levels[skills[id].bound][lv].g - (a - (levels[skills[id].bound][lv].f - 40));
-
-	refreshspsrcbtn();
-}
-
-// 选择现有神通画面 - 减少碎片
-function sronminus(v) {
-	val = Number($('#sr' + v)[0].innerHTML);
-	if (val > 0) {
-		$('#sr' + v)[0].innerHTML = val - 40; 
-		sv = Number($('#ssrccnt')[0].innerHTML);
-		$('#ssrccnt')[0].innerHTML = sv + 40;
+// Source submit
+$('#ssub').on('click', function() {
+	source[currentSourceIdx].id = Number($('#sl1')[0].value);
+	source[currentSourceIdx].level = Number($('#sll1')[0].value);
+	source[currentSourceIdx].src = [];
+	for (var i = 0; i < skills.length; i++) {
+		var cnt = Number($('#sr' + i)[0].innerHTML);
+		if (cnt > 0 && source[currentSourceIdx].id !== i) {
+			source[currentSourceIdx].src.push({id: i, amount: cnt});
+		}
 	}
-	
-	refreshspsrcbtn();
-}
-
-// 选择现有神通画面 - 新增碎片
-function sronplus(v) {
-	$('#sr' + v)[0].innerHTML = Number($('#sr' + v)[0].innerHTML) + 40; 
-	$('#ssrccnt')[0].innerHTML = Number($('#ssrccnt')[0].innerHTML) - 40;
-	
-	refreshspsrcbtn();
-}
-
-// 选择现有神通画面 - 完成
-$('#ssub').on('click', function(e) {
-	source[idx].id = Number($('#sl1')[0].value);
-	source[idx].level = Number($('#sll1')[0].value);
-	source[idx].src = [];
-	for (i = 0; i < 40; i++) {
-		cnt = Number($('#sr' + i)[0].innerHTML);
-		if (cnt > 0 && source[idx].id != i)
-			source[idx].src.push({id:i, amount:cnt});
-	}
-
 	refreshsourcepowerview();
 	computesuperpower();
-	bsOffcanvas0.hide();
+	sourceOffcanvas.hide();
 	updatedatadone();
 });
 
-//////////////////////////////////////////////
-
-// 选择现有碎片画面 - 打开
-$('#sf1').on('click', function (e) {
-	sm = new Map();
-	frags.forEach(function(it) {
-		sm.set(it.id, it.amount);
+// Fragment row click — open fragment selection panel
+$('#sf1').on('click', function() {
+	var fragMap = new Map();
+	frags.forEach(function(item) {
+		fragMap.set(item.id, item.amount);
 	});
 	$('#ssrccnt')[0].innerText = 0;
 
-	// 显示现有神通材料选择画面
-	sks = tmptgt = JSON.parse(JSON.stringify(skills));
-	sks.sort(function(a, b) {
-		if (a.shop == b.shop && a.bound == b.bound && a.type == b.type)
-			return a.id - b.id;
-		if (a.shop == b.shop && a.bound == b.bound)
-			return a.type - b.type;
-		if (a.shop == b.shop)
-			return a.bound - b.bound;
-		return a.shop - b.shop;
-	});
-	strhtml = '<div class="row">';
-	for (i = 0; i < sks.length; i+=9) {
-		strhtml += '<div class="col col-md-6 px-2 mx-0 my-1 border align-start" style="min-width:120px; background-color: rgba(255, 255, 255, 0.9);"><h6 class="my-1">' + shops[sks[i].shop] + ' ' + '</h6><hr class="divider my-2">';
-		for (j = i; j < Math.min(i + 9, sks.length); j++) {
-			amount = sm.get(sks[j].id) == undefined ? "" : sm.get(sks[j].id);
-			strhtml += '<p id="src' + sks[j].id + '" class="text-start mb-1"><span class=' + colors[sks[j].type] + '>' + sks[j].name + '</span>';
-			strhtml += ' <button onclick="sfonminus(' +  + sks[j].id + ')">-</button><button onclick="sfonplus(' +  + sks[j].id + ')">+</button>';
-			strhtml += ' <span id="sf' + sks[j].id + '" class="badge text-bg-secondary">' + amount + '</span>';
-		}
-		strhtml += '</div>';
-	}
-	strhtml += '</div>';
-	$('#sfshop')[0].innerHTML = strhtml;
+	$('#sfshop')[0].innerHTML = buildShopSelector(
+		fragMap, -1, 'sfonminus', 'sfonplus', 'sf'
+	);
 
 	$('#fragpcnt')[0].value = fragp;
 	$('#fragbcnt')[0].value = fragb;
-	
-	// 最后打开画面
-	bsOffcanvas0 = new bootstrap.Offcanvas('#fsel');
-	bsOffcanvas0.show();
+
+	sourceOffcanvas = new bootstrap.Offcanvas('#fsel');
+	sourceOffcanvas.show();
 });
 
-// 选择现有碎片画面 - 减少碎片
-function sfonminus(v) {
-	val = Number($('#sf' + v)[0].innerHTML);
-	if (val > 0)
-		$('#sf' + v)[0].innerHTML = val - 40; 
-}
-
-// 选择现有碎片画面 - 新增碎片
-function sfonplus(v) {
-	$('#sf' + v)[0].innerHTML = Number($('#sf' + v)[0].innerHTML) + 40; 
-}
-
-// 选择现有碎片画面 - 完成
-$('#sfsub').on('click', function(e) {
+// Fragment submit
+$('#sfsub').on('click', function() {
 	frags = [];
-	for (i = 0; i < 40; i++) {
-		cnt = Number($('#sf' + i)[0].innerHTML);
-		if (cnt > 0)
-			frags.push({id:i, amount:cnt});
+	for (var i = 0; i < skills.length; i++) {
+		var cnt = Number($('#sf' + i)[0].innerHTML);
+		if (cnt > 0) {
+			frags.push({id: i, amount: cnt});
+		}
 	}
-	
 	fragb = Number($('#fragbcnt')[0].value);
 	fragp = Number($('#fragpcnt')[0].value);
-
 	refreshsourcepowerview();
 	computesuperpower();
-	bsOffcanvas0.hide();
+	sourceOffcanvas.hide();
 	updatedatadone();
 });
 
-function main() {	
+// ===== Initialize =====
+function main() {
 	refreshdata();
 	refreshsourcepowerview();
 	refreshtargetpowerview();
@@ -649,3 +625,5 @@ function main() {
 }
 
 main();
+
+})();

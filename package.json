@@ -1,0 +1,23 @@
+{
+  "name": "swordlifepowercalc",
+  "version": "1.0.0",
+  "main": "jquery.js",
+  "scripts": {
+    "test": "vitest run"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/wuhao-112/swordlifepowercalc.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/wuhao-112/swordlifepowercalc/issues"
+  },
+  "homepage": "https://github.com/wuhao-112/swordlifepowercalc#readme",
+  "description": "",
+  "devDependencies": {
+    "vitest": "^4.1.4"
+  }
+}
