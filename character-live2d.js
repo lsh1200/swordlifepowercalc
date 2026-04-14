@@ -26,7 +26,7 @@
     backgroundAlpha: 0,
     antialias: true,
     autoDensity: true,
-    resolution: 2,  // 2x resolution for sharp rendering
+    resolution: 2,
   });
 
   var sprite = null;
@@ -70,50 +70,47 @@
 
     var s = getSize();
 
-    // Breathing — visible chest rise/fall
-    var breathCycle = Math.sin(time * 2.0) * 0.008;
-    var breathY = 1 + breathCycle;
-
-    // Idle sway — gentle side-to-side rocking
-    var swayCycle = Math.sin(time * 0.8) * 0.005;
-    var swayX = 1 + swayCycle;
-
     if (sprite) {
       var tw = sprite.texture.width;
       var th = sprite.texture.height;
       var baseScale = Math.max(s.w / tw, s.h / th);
 
-      sprite.scale.set(baseScale * swayX, baseScale * breathY);
+      // Breathing — visible scale pulse
+      var breathY = 1 + Math.sin(time * 2.2) * 0.015;
+      var breathX = 1 + Math.sin(time * 2.2) * 0.005;
+      sprite.scale.set(baseScale * breathX, baseScale * breathY);
 
-      // Horizontal drift — character sways left/right
-      var drift = Math.sin(time * 0.6) * 3;
+      // Side-to-side rocking — clearly visible
+      var drift = Math.sin(time * 0.7) * 6;
       sprite.x = s.w / 2 + drift;
 
-      // Mouse parallax on hover
+      // Vertical float — gentle bobbing
+      var bob = Math.sin(time * 1.0) * 3;
+      sprite.y = bob;
+
+      // Mouse parallax
       if (isHovering) {
-        sprite.x += (mouseX - s.w / 2) * 0.02;
-        sprite.y = (mouseY - s.h / 2) * 0.01;
-      } else {
-        // Subtle vertical bob
-        sprite.y = Math.sin(time * 1.2) * 1.5;
+        sprite.x += (mouseX - s.w / 2) * 0.04;
+        sprite.y += (mouseY - s.h / 2) * 0.02;
       }
     }
 
-    // Displacement — hair and robe flowing
+    // Displacement — strong flowing distortion for hair/robes
     if (dispFilter) {
-      var baseDisp = 8 + Math.sin(time * 1.0) * 6;
-      dispFilter.scale.x = baseDisp * (isHovering ? 2.0 : 1);
-      dispFilter.scale.y = 5 + Math.sin(time * 1.5) * 4;
+      dispFilter.scale.x = 20 + Math.sin(time * 1.3) * 15;
+      dispFilter.scale.y = 12 + Math.cos(time * 1.8) * 10;
+      if (isHovering) {
+        dispFilter.scale.x *= 1.5;
+        dispFilter.scale.y *= 1.5;
+      }
     }
 
     if (dispSprite) {
-      // Scroll displacement map for organic wave motion
-      dispSprite.x = Math.sin(time * 0.5) * 8;
-      dispSprite.y = Math.cos(time * 0.7) * 6;
+      dispSprite.x = Math.sin(time * 0.5) * 12;
+      dispSprite.y = Math.cos(time * 0.8) * 10;
     }
   }
 
-  // Mouse tracking
   panel.addEventListener('mouseenter', function () { isHovering = true; });
   panel.addEventListener('mouseleave', function () { isHovering = false; });
   panel.addEventListener('mousemove', function (e) {
@@ -122,19 +119,16 @@
     mouseY = e.clientY - rect.top;
   });
 
-  // Resize
   var resizeTimer;
   window.addEventListener('resize', function () {
     clearTimeout(resizeTimer);
     resizeTimer = setTimeout(fitSprite, 100);
   });
 
-  // Refit when report content changes
   var tsum = document.getElementById('tsum');
   if (tsum) {
-    var observer = new MutationObserver(function () {
+    new MutationObserver(function () {
       setTimeout(fitSprite, 50);
-    });
-    observer.observe(tsum, { childList: true, subtree: true, characterData: true });
+    }).observe(tsum, { childList: true, subtree: true, characterData: true });
   }
 })();
