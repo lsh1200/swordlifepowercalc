@@ -345,10 +345,17 @@ function buildKeepSelector() {
 		return a.shop - b.shop;
 	});
 
-	// Build a set of skill IDs that are in source slots
-	var sourceSkillIds = new Set();
+	// Build a set of all skill IDs the user currently owns fragments for:
+	// source slot body fragments, source slot src fragments, and loose fragments
+	var ownedSkillIds = new Set();
 	for (var i = 0; i < SLOT_COUNT; i++) {
-		sourceSkillIds.add(source[i].id);
+		ownedSkillIds.add(source[i].id);
+		for (var j = 0; j < source[i].src.length; j++) {
+			ownedSkillIds.add(source[i].src[j].id);
+		}
+	}
+	for (var i = 0; i < frags.length; i++) {
+		ownedSkillIds.add(frags[i].id);
 	}
 
 	var html = '<div class="row">';
@@ -358,9 +365,8 @@ function buildKeepSelector() {
 		for (var j = i; j < Math.min(i + SKILLS_PER_SHOP, sortedSkills.length); j++) {
 			var sk = sortedSkills[j];
 			var isChecked = keep.indexOf(sk.id) !== -1;
-			var isSource = sourceSkillIds.has(sk.id);
-			// Only allow keeping skills that are in source slots
-			var disabledAttr = isSource ? '' : ' disabled';
+			var isOwned = ownedSkillIds.has(sk.id);
+			var disabledAttr = isOwned ? '' : ' disabled';
 			var checkedAttr = isChecked ? ' checked' : '';
 			html += '<div class="form-check text-start mb-1">';
 			html += '<input class="form-check-input" type="checkbox" id="kc' + sk.id + '" value="' + sk.id + '"' + checkedAttr + disabledAttr + '>';
