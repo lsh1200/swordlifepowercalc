@@ -726,6 +726,7 @@ document.getElementById('ssel').addEventListener('hidden.bs.offcanvas', function
 	if (!savedFlag) { dirtySource = true; dirtySourceIdx = currentSourceIdx; }
 	savedFlag = false;
 	refreshDirtyIndicators();
+	document.title = 'HIDDEN fired src=' + dirtySource + ' saved=' + savedFlag;
 });
 document.getElementById('fsel').addEventListener('hidden.bs.offcanvas', function() {
 	if (!savedFlag) { dirtyFrag = true; }
