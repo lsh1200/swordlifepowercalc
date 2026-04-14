@@ -395,18 +395,21 @@ function buildKeepSelector() {
 		return a.shop - b.shop;
 	});
 
-	// Build a set of all skill IDs the user currently owns fragments for:
+	// Build a map of skill ID → total fragment count the user currently owns:
 	// source slot body fragments, source slot src fragments, and loose fragments
-	var ownedSkillIds = new Set();
+	var ownedAmounts = new Map();
 	for (var i = 0; i < SLOT_COUNT; i++) {
-		ownedSkillIds.add(source[i].id);
+		var bodyAmt = levels[skills[source[i].id].bound][source[i].level].f - FRAGMENT_UNIT;
+		ownedAmounts.set(source[i].id, (ownedAmounts.get(source[i].id) || 0) + bodyAmt);
 		for (var j = 0; j < source[i].src.length; j++) {
-			ownedSkillIds.add(source[i].src[j].id);
+			var srcId = source[i].src[j].id;
+			ownedAmounts.set(srcId, (ownedAmounts.get(srcId) || 0) + source[i].src[j].amount);
 		}
 	}
 	for (var i = 0; i < frags.length; i++) {
-		ownedSkillIds.add(frags[i].id);
+		ownedAmounts.set(frags[i].id, (ownedAmounts.get(frags[i].id) || 0) + frags[i].amount);
 	}
+	var ownedSkillIds = new Set(ownedAmounts.keys());
 
 	var html = '<div class="row">';
 	for (var i = 0; i < sortedSkills.length; i += SKILLS_PER_SHOP) {
@@ -421,7 +424,8 @@ function buildKeepSelector() {
 			var labelStyle = isOwned ? '' : ' style="opacity:0.1"';
 			html += '<div class="form-check text-start mb-1">';
 			html += '<input class="form-check-input" type="checkbox" id="kc' + sk.id + '" value="' + sk.id + '"' + checkedAttr + disabledAttr + '>';
-			html += '<label class="form-check-label ' + colors[sk.type] + '"' + labelStyle + ' for="kc' + sk.id + '">' + sk.name + '</label>';
+			var amtTag = isOwned ? ' <span class="keep-amount">(' + ownedAmounts.get(sk.id) + ')</span>' : '';
+			html += '<label class="form-check-label ' + colors[sk.type] + '"' + labelStyle + ' for="kc' + sk.id + '">' + sk.name + amtTag + '</label>';
 			html += '</div>';
 		}
 		html += '</div>';
