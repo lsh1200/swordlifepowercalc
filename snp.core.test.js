@@ -621,4 +621,169 @@ describe('validateUrlData', () => {
 		};
 		expect(validateUrlData(d)).toBe(true);
 	});
+
+	it('accepts valid keep array', () => {
+		const d = {
+			source: defaultSource,
+			frags: defaultFrags,
+			fragp: defaultFragp,
+			fragb: defaultFragb,
+			target: defaultTarget,
+			keep: [47, 9]
+		};
+		expect(validateUrlData(d)).toBe(true);
+	});
+
+	it('accepts empty keep array', () => {
+		const d = {
+			source: defaultSource,
+			frags: defaultFrags,
+			fragp: defaultFragp,
+			fragb: defaultFragb,
+			target: defaultTarget,
+			keep: []
+		};
+		expect(validateUrlData(d)).toBe(true);
+	});
+
+	it('accepts data without keep field (optional)', () => {
+		const d = {
+			source: defaultSource,
+			frags: defaultFrags,
+			fragp: defaultFragp,
+			fragb: defaultFragb,
+			target: defaultTarget
+		};
+		expect(validateUrlData(d)).toBe(true);
+	});
+
+	it('rejects keep with out-of-range skill ID', () => {
+		const d = {
+			source: defaultSource,
+			frags: defaultFrags,
+			fragp: defaultFragp,
+			fragb: defaultFragb,
+			target: defaultTarget,
+			keep: [999]
+		};
+		expect(validateUrlData(d)).toBe(false);
+	});
+
+	it('rejects keep with negative skill ID', () => {
+		const d = {
+			source: defaultSource,
+			frags: defaultFrags,
+			fragp: defaultFragp,
+			fragb: defaultFragb,
+			target: defaultTarget,
+			keep: [-1]
+		};
+		expect(validateUrlData(d)).toBe(false);
+	});
+
+	it('rejects keep with non-number entries', () => {
+		const d = {
+			source: defaultSource,
+			frags: defaultFrags,
+			fragp: defaultFragp,
+			fragb: defaultFragb,
+			target: defaultTarget,
+			keep: ["abc"]
+		};
+		expect(validateUrlData(d)).toBe(false);
+	});
+
+	it('rejects keep as non-array', () => {
+		const d = {
+			source: defaultSource,
+			frags: defaultFrags,
+			fragp: defaultFragp,
+			fragb: defaultFragb,
+			target: defaultTarget,
+			keep: "not-an-array"
+		};
+		expect(validateUrlData(d)).toBe(false);
+	});
+});
+
+
+// ============================================================
+// 6. computesuperpower with keep (Keep Skills Feature)
+// ============================================================
+describe('computesuperpower with keep', () => {
+	it('kept skill body fragments are not converted in same-shop conversion', () => {
+		// Setup: 丹朱(id:0, shop:0) and 風捲(id:4, shop:0) both have body fragments
+		// Target needs 龜蛇(id:12, shop:0) body fragments via same-shop conversion
+		// Keep 丹朱(id:0) — its body fragments should NOT be used for conversion
+		const source = [
+			{id:0, level:5, src:[]},  // 丹朱 shop:0, lv5: f=200, body=160
+			{id:4, level:5, src:[]},  // 風捲 shop:0, lv5: f=200, body=160
+			{id:1, level:1, src:[]},
+			{id:2, level:1, src:[]},
+			{id:3, level:1, src:[]},
+			{id:5, level:1, src:[]},
+		];
+		const target = [
+			{id:12, level:5}, // 龜蛇 shop:0, needs 160 body
+			{id:4, level:1},
+			{id:1, level:1},
+			{id:2, level:1},
+			{id:3, level:1},
+			{id:5, level:1},
+		];
+
+		// Without keep: both 丹朱 and 風捲 can be used for conversion
+		const resultNoKeep = computesuperpower(source, [], 0, 0, target);
+		// With keep=[0]: only 風捲 can be used for conversion
+		const resultWithKeep = computesuperpower(source, [], 0, 0, target, [0]);
+
+		// 丹朱 should NOT appear as conversion source when kept
+		const keptConversions = resultWithKeep.conversions.filter(c => c.fromId === 0);
+		expect(keptConversions).toHaveLength(0);
+
+		// 風捲 should still be used for conversion
+		const nonKeptConversions = resultWithKeep.conversions.filter(c => c.fromId === 4);
+		expect(nonKeptConversions.length).toBeGreaterThan(0);
+	});
+
+	it('kept skill fragments still count towards generic (gold) allocation', () => {
+		// Keep a skill — its body fragments should still be available for Phase 4 (generic frag allocation)
+		const source = [
+			{id:0, level:5, src:[]},  // 丹朱 shop:0, body=160
+			{id:1, level:1, src:[]},
+			{id:2, level:1, src:[]},
+			{id:3, level:1, src:[]},
+			{id:4, level:1, src:[]},
+			{id:5, level:1, src:[]},
+		];
+		const target = [
+			{id:0, level:1},
+			{id:1, level:1},
+			{id:2, level:1},
+			{id:3, level:1},
+			{id:4, level:1},
+			{id:5, level:1},
+		];
+
+		// With keep=[0], 丹朱 body=160 should still be in remainderGold
+		const result = computesuperpower(source, [], 0, 0, target, [0]);
+		expect(result.remainderGold).toBeGreaterThanOrEqual(160);
+	});
+
+	it('empty keep array behaves same as no keep', () => {
+		const resultNoKeep = computesuperpower(defaultSource, defaultFrags, defaultFragp, defaultFragb, defaultTarget);
+		const resultEmptyKeep = computesuperpower(defaultSource, defaultFrags, defaultFragp, defaultFragb, defaultTarget, []);
+
+		expect(resultEmptyKeep.totalConversions).toBe(resultNoKeep.totalConversions);
+		expect(resultEmptyKeep.missingOther).toBe(resultNoKeep.missingOther);
+		expect(resultEmptyKeep.remainderGold).toBe(resultNoKeep.remainderGold);
+	});
+
+	it('undefined keep behaves same as no keep', () => {
+		const resultNoKeep = computesuperpower(defaultSource, defaultFrags, defaultFragp, defaultFragb, defaultTarget);
+		const resultUndef = computesuperpower(defaultSource, defaultFrags, defaultFragp, defaultFragb, defaultTarget, undefined);
+
+		expect(resultUndef.totalConversions).toBe(resultNoKeep.totalConversions);
+		expect(resultUndef.remainderGold).toBe(resultNoKeep.remainderGold);
+	});
 });

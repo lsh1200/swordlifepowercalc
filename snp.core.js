@@ -149,9 +149,11 @@ const skills = [
  * @param {number} fragp - purple scroll count
  * @param {number} fragb - blue scroll count
  * @param {Array} target - 6 target skills with id, level
+ * @param {Array} [keep] - skill IDs whose body fragments should not be converted in same-shop conversion
  * @returns {{ conversions, totalConversions, deficits, missingOther, missingPurple, missingBlue, remainderGold, remainderPurple, remainderBlue, remainderDetails }}
  */
-function computesuperpower(source, frags, fragp, fragb, target) {
+function computesuperpower(source, frags, fragp, fragb, target, keep) {
+	const keepSet = new Set(Array.isArray(keep) ? keep : []);
 	let tg = 0;
 	let tp = fragp;
 	let tb = fragb;
@@ -206,7 +208,7 @@ function computesuperpower(source, frags, fragp, fragb, target) {
 		const sk = skills[it.id];
 		sm.forEach(function(v, k) {
 			if (it.body === 0) return;
-			if (v > 0 && it.id !== k && skills[k].shop === sk.shop) {
+			if (v > 0 && it.id !== k && skills[k].shop === sk.shop && !keepSet.has(k)) {
 				const used = Math.min(it.body, v);
 				conversions.push({
 					fromId: k,
@@ -363,6 +365,13 @@ function validateUrlData(d) {
 		if (!t || typeof t.id !== 'number' || t.id < 0 || t.id >= skills.length) return false;
 		const sk = skills[t.id];
 		if (typeof t.level !== 'number' || t.level < 1 || t.level >= levels[sk.bound].length) return false;
+	}
+
+	if (d.keep !== undefined) {
+		if (!Array.isArray(d.keep)) return false;
+		for (let i = 0; i < d.keep.length; i++) {
+			if (typeof d.keep[i] !== 'number' || d.keep[i] < 0 || d.keep[i] >= skills.length) return false;
+		}
 	}
 
 	return true;

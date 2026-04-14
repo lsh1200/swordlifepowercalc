@@ -149,9 +149,9 @@ var skills = [
 ];
 
 // ===== Application State =====
-var source, frags, fragp, fragb, target;
+var source, frags, fragp, fragb, target, keep;
 var currentSourceIdx;
-var sourceOffcanvas, targetOffcanvas;
+var sourceOffcanvas, targetOffcanvas, keepOffcanvas;
 
 // ===== URL Data Validation =====
 function validateUrlData(data) {
@@ -188,14 +188,21 @@ function validateUrlData(data) {
 		if (typeof t.level !== 'number' || t.level < 1 || t.level >= levels[sk.bound].length) return false;
 	}
 
+	if (data.keep !== undefined) {
+		if (!Array.isArray(data.keep)) return false;
+		for (var i = 0; i < data.keep.length; i++) {
+			if (typeof data.keep[i] !== 'number' || data.keep[i] < 0 || data.keep[i] >= skills.length) return false;
+		}
+	}
+
 	return true;
 }
 
 // ===== State Persistence =====
 function updatedatadone() {
-	window.location.href = '?' + encodeURIComponent(JSON.stringify({
-		source: source, frags: frags, fragp: fragp, fragb: fragb, target: target
-	}));
+	var state = {source: source, frags: frags, fragp: fragp, fragb: fragb, target: target};
+	if (keep.length > 0) state.keep = keep;
+	window.location.href = '?' + encodeURIComponent(JSON.stringify(state));
 }
 
 // ===== Data Loading =====
@@ -213,12 +220,14 @@ function refreshdata() {
 		fragp = data.fragp;
 		fragb = data.fragb;
 		target = data.target;
+		keep = Array.isArray(data.keep) ? data.keep : [];
 	} else {
 		source = JSON.parse('[{"id":47,"level":4,"src":[{"id":15,"amount":80},{"id":28,"amount":120},{"id":45,"amount":160}]},{"id":49,"level":7,"src":[{"id":14,"amount":120},{"id":20,"amount":80},{"id":29,"amount":80},{"id":38,"amount":320},{"id":39,"amount":80},{"id":45,"amount":120},{"id":55,"amount":40}]},{"id":50,"level":7,"src":[{"id":14,"amount":400},{"id":28,"amount":40},{"id":31,"amount":360},{"id":53,"amount":40}]},{"id":46,"level":9,"src":[{"id":20,"amount":400},{"id":21,"amount":480},{"id":35,"amount":120},{"id":37,"amount":160},{"id":39,"amount":160},{"id":53,"amount":40}]},{"id":9,"level":12,"src":[{"id":11,"amount":40},{"id":21,"amount":120},{"id":28,"amount":80},{"id":29,"amount":80},{"id":32,"amount":240}]},{"id":11,"level":12,"src":[{"id":28,"amount":80},{"id":31,"amount":480}]}]');
 		frags = JSON.parse('[{"id":0,"amount":680},{"id":28,"amount":120},{"id":29,"amount":280},{"id":35,"amount":280},{"id":36,"amount":80},{"id":47,"amount":40}]');
 		fragp = 3031;
 		fragb = 8650;
 		target = JSON.parse('[{"id":47,"level":6},{"id":49,"level":7},{"id":50,"level":9},{"id":46,"level":10},{"id":9,"level":12},{"id":11,"level":12}]');
+		keep = [];
 	}
 }
 
@@ -316,6 +325,54 @@ function refreshtargetpowerview() {
 	$('#tsrc47')[0].innerHTML = totalBlue;
 }
 
+// ===== View: Keep Skills Display =====
+function refreshkeepview() {
+	if (keep.length === 0) {
+		$('#keeplist')[0].innerHTML = '無 (點擊設定)';
+	} else {
+		var names = keep.map(function(id) { return skills[id].name; });
+		$('#keeplist')[0].innerHTML = names.join('、') + ' (點擊修改)';
+	}
+}
+
+// ===== Keep Panel: Build Checkbox Grid =====
+function buildKeepSelector() {
+	var sortedSkills = JSON.parse(JSON.stringify(skills));
+	sortedSkills.sort(function(a, b) {
+		if (a.shop === b.shop && a.bound === b.bound && a.type === b.type) return a.id - b.id;
+		if (a.shop === b.shop && a.bound === b.bound) return a.type - b.type;
+		if (a.shop === b.shop) return a.bound - b.bound;
+		return a.shop - b.shop;
+	});
+
+	// Build a set of skill IDs that are in source slots
+	var sourceSkillIds = new Set();
+	for (var i = 0; i < SLOT_COUNT; i++) {
+		sourceSkillIds.add(source[i].id);
+	}
+
+	var html = '<div class="row">';
+	for (var i = 0; i < sortedSkills.length; i += SKILLS_PER_SHOP) {
+		html += '<div class="col col-md-6 px-2 mx-0 my-1 border align-start" style="min-width:120px; background-color: rgba(255, 255, 255, 0.9);">';
+		html += '<h6 class="my-1">' + shops[sortedSkills[i].shop] + '</h6><hr class="divider my-2">';
+		for (var j = i; j < Math.min(i + SKILLS_PER_SHOP, sortedSkills.length); j++) {
+			var sk = sortedSkills[j];
+			var isChecked = keep.indexOf(sk.id) !== -1;
+			var isSource = sourceSkillIds.has(sk.id);
+			// Only allow keeping skills that are in source slots
+			var disabledAttr = isSource ? '' : ' disabled';
+			var checkedAttr = isChecked ? ' checked' : '';
+			html += '<div class="form-check text-start mb-1">';
+			html += '<input class="form-check-input" type="checkbox" id="kc' + sk.id + '" value="' + sk.id + '"' + checkedAttr + disabledAttr + '>';
+			html += '<label class="form-check-label ' + colors[sk.type] + '" for="kc' + sk.id + '">' + sk.name + '</label>';
+			html += '</div>';
+		}
+		html += '</div>';
+	}
+	html += '</div>';
+	return html;
+}
+
 // ===== Core Computation =====
 function computesuperpower() {
 	var totalGold = 0;
@@ -363,13 +420,15 @@ function computesuperpower() {
 	});
 
 	// Phase 3: Convert same-shop fragments to fill remaining body needs
+	// Skip fragments whose skill ID is in the keep list (body fragments preserved)
+	var keepSet = new Set(keep);
 	var conversionHtml = '';
 	var conversionCount = 0;
 	targetNeeds.forEach(function(item) {
 		var skill = skills[item.id];
 		fragmentMap.forEach(function(amount, fragId) {
 			if (item.body === 0) return;
-			if (amount > 0 && item.id !== fragId && skills[fragId].shop === skill.shop) {
+			if (amount > 0 && item.id !== fragId && skills[fragId].shop === skill.shop && !keepSet.has(fragId)) {
 				var used = Math.min(item.body, amount);
 				conversionHtml += skills[fragId].name + " x" + (used / FRAGMENT_UNIT) + " 轉換 " + skills[item.id].name + "<br />";
 				conversionCount += used / FRAGMENT_UNIT;
@@ -700,11 +759,35 @@ $('#sfsub').on('click', function() {
 	updatedatadone();
 });
 
+// Keep row click — open keep selection panel
+$('#skp').on('click', function() {
+	$('#kshop')[0].innerHTML = buildKeepSelector();
+	keepOffcanvas = new bootstrap.Offcanvas('#ksel');
+	keepOffcanvas.show();
+});
+
+// Keep submit
+$('#ksub').on('click', function() {
+	keep = [];
+	for (var i = 0; i < skills.length; i++) {
+		var cb = document.getElementById('kc' + i);
+		if (cb && cb.checked) {
+			keep.push(i);
+		}
+	}
+	refreshkeepview();
+	refreshsourcepowerview();
+	computesuperpower();
+	keepOffcanvas.hide();
+	updatedatadone();
+});
+
 // ===== Initialize =====
 function main() {
 	refreshdata();
 	refreshsourcepowerview();
 	refreshtargetpowerview();
+	refreshkeepview();
 	computesuperpower();
 }
 
