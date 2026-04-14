@@ -520,8 +520,8 @@ h1, h2, h3, h4, h5, h6 {
 #ssel::before, #fsel::before, #ksel::before {
   content: '';
   position: absolute;
-  inset: 0;
-  background: rgba(26, 26, 30, 0.88);
+  inset: -1px;
+  background: rgba(26, 26, 30, 0.94);
   z-index: 0;
   pointer-events: none;
 }
@@ -541,8 +541,8 @@ h1, h2, h3, h4, h5, h6 {
 #tsel::before {
   content: '';
   position: absolute;
-  inset: 0;
-  background: rgba(26, 26, 30, 0.88);
+  inset: -1px;
+  background: rgba(26, 26, 30, 0.94);
   z-index: 0;
   pointer-events: none;
 }
