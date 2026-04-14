@@ -722,14 +722,10 @@ function refreshDirtyIndicators() {
 // Hidden event listeners — mark dirty if not saved
 // NOTE: Bootstrap 5 fires custom events via native dispatchEvent(),
 // so we must use addEventListener, not jQuery .on()
-document.getElementById('ssel').addEventListener('shown.bs.offcanvas', function() {
-	document.title = '[SHOWN] sl1=' + $('#sl1')[0].value + ' t=' + Date.now();
-});
 document.getElementById('ssel').addEventListener('hidden.bs.offcanvas', function() {
 	if (!savedFlag) { dirtySource = true; dirtySourceIdx = currentSourceIdx; }
 	savedFlag = false;
 	refreshDirtyIndicators();
-	document.title = '[HIDE] dirty=' + dirtySource + ' idx=' + dirtySourceIdx + ' sl1=' + $('#sl1')[0].value + ' t=' + Date.now();
 });
 document.getElementById('fsel').addEventListener('hidden.bs.offcanvas', function() {
 	if (!savedFlag) { dirtyFrag = true; }
@@ -785,15 +781,12 @@ $('#tsub').on('click', function() {
 });
 
 // Source table row click — open source selection panel
-$('#stbl > tbody > tr').on('click', function(e) {
-	var targetId = e.target.id;
-	var clickedIdx = targetId[targetId.length - 1];
+$('#stbl > tbody > tr').on('click', function() {
+	var clickedIdx = String($(this).index());
 
 	if (dirtySource && String(dirtySourceIdx) === String(clickedIdx)) {
 		// Same row with unsaved changes — reopen without resetting
-		document.title = '[OPEN] HIT idx=' + dirtySourceIdx + ' sl1=' + $('#sl1')[0].value + ' t=' + Date.now();
 	} else {
-		document.title = '[OPEN] MISS dirty=' + dirtySource + ' idx=' + dirtySourceIdx + ' click=' + clickedIdx + ' t=' + Date.now();
 		currentSourceIdx = clickedIdx;
 
 		$('#sl1')[0].innerHTML = '';
