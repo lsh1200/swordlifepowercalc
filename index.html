@@ -7,7 +7,7 @@
   <meta name="theme-color" content="#1a1a1e">
   <title>神通推演計算器-問劍長生</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
-  <link rel="stylesheet" href="styles.css?v=13">
+  <link rel="stylesheet" href="styles.css?v=14">
   <script src="jquery.js"></script>
 </head>
 <body>
@@ -196,21 +196,22 @@
           <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
         </div>
         <div class="offcanvas-body">
-          <div class="container-fluid">
+          <div class="container">
             <div class="row">
-              <div class="col-8"><h6 style="color:var(--text-secondary)">神通</h6></div>
+              <div class="col-1"><h6 style="color:var(--text-secondary)">#</h6></div>
+              <div class="col-7"><h6 style="color:var(--text-secondary)">神通</h6></div>
               <div class="col-4"><h6 style="color:var(--text-secondary)">等級</h6></div>
             </div>
-            <div class="row"><div class="col-8"><select id="tl0" class="form-select mt-1" aria-label="選擇目標神通1" onchange="tponchanged(0);"></select></div><div class="col-4"><select id="tll0" class="form-select mt-1" aria-label="選擇等級1"></select></div></div>
-            <div class="row"><div class="col-8"><select id="tl1" class="form-select mt-1" aria-label="選擇目標神通2" onchange="tponchanged(1);"></select></div><div class="col-4"><select id="tll1" class="form-select mt-1" aria-label="選擇等級2"></select></div></div>
-            <div class="row"><div class="col-8"><select id="tl2" class="form-select mt-1" aria-label="選擇目標神通3" onchange="tponchanged(2);"></select></div><div class="col-4"><select id="tll2" class="form-select mt-1" aria-label="選擇等級3"></select></div></div>
-            <div class="row"><div class="col-8"><select id="tl3" class="form-select mt-1" aria-label="選擇目標神通4" onchange="tponchanged(3);"></select></div><div class="col-4"><select id="tll3" class="form-select mt-1" aria-label="選擇等級4"></select></div></div>
-            <div class="row"><div class="col-8"><select id="tl4" class="form-select mt-1" aria-label="選擇目標神通5" onchange="tponchanged(4);"></select></div><div class="col-4"><select id="tll4" class="form-select mt-1" aria-label="選擇等級5"></select></div></div>
-            <div class="row"><div class="col-8"><select id="tl5" class="form-select mt-1" aria-label="選擇目標神通6" onchange="tponchanged(5);"></select></div><div class="col-4"><select id="tll5" class="form-select mt-1" aria-label="選擇等級6"></select></div></div>
+            <div class="tsel-row"><span class="tsel-num">1</span><div class="tsel-fields"><select id="tl0" class="form-select" aria-label="選擇目標神通1" onchange="tponchanged(0);"></select><select id="tll0" class="form-select" aria-label="選擇等級1"></select></div></div>
+            <div class="tsel-row"><span class="tsel-num">2</span><div class="tsel-fields"><select id="tl1" class="form-select" aria-label="選擇目標神通2" onchange="tponchanged(1);"></select><select id="tll1" class="form-select" aria-label="選擇等級2"></select></div></div>
+            <div class="tsel-row"><span class="tsel-num">3</span><div class="tsel-fields"><select id="tl2" class="form-select" aria-label="選擇目標神通3" onchange="tponchanged(2);"></select><select id="tll2" class="form-select" aria-label="選擇等級3"></select></div></div>
+            <div class="tsel-row"><span class="tsel-num">4</span><div class="tsel-fields"><select id="tl3" class="form-select" aria-label="選擇目標神通4" onchange="tponchanged(3);"></select><select id="tll3" class="form-select" aria-label="選擇等級4"></select></div></div>
+            <div class="tsel-row"><span class="tsel-num">5</span><div class="tsel-fields"><select id="tl4" class="form-select" aria-label="選擇目標神通5" onchange="tponchanged(4);"></select><select id="tll4" class="form-select" aria-label="選擇等級5"></select></div></div>
+            <div class="tsel-row"><span class="tsel-num">6</span><div class="tsel-fields"><select id="tl5" class="form-select" aria-label="選擇目標神通6" onchange="tponchanged(5);"></select><select id="tll5" class="form-select" aria-label="選擇等級6"></select></div></div>
             <hr class="divider">
             <div class="row justify-content-center">
-              <div class="col col-4">
-                <button id="tsub" class="btn btn-primary mt-2" type="submit">確定修改</button>
+              <div class="col">
+                <button id="tsub" class="btn btn-primary" type="submit">確定修改</button>
               </div>
             </div>
           </div>
