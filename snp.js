@@ -368,9 +368,10 @@ function buildKeepSelector() {
 			var isOwned = ownedSkillIds.has(sk.id);
 			var disabledAttr = isOwned ? '' : ' disabled';
 			var checkedAttr = isChecked ? ' checked' : '';
+			var labelStyle = isOwned ? '' : ' style="opacity:0.1"';
 			html += '<div class="form-check text-start mb-1">';
 			html += '<input class="form-check-input" type="checkbox" id="kc' + sk.id + '" value="' + sk.id + '"' + checkedAttr + disabledAttr + '>';
-			html += '<label class="form-check-label ' + colors[sk.type] + '" for="kc' + sk.id + '">' + sk.name + '</label>';
+			html += '<label class="form-check-label ' + colors[sk.type] + '"' + labelStyle + ' for="kc' + sk.id + '">' + sk.name + '</label>';
 			html += '</div>';
 		}
 		html += '</div>';
@@ -498,6 +499,34 @@ function computesuperpower() {
 	$('#tsum')[0].innerHTML = conversionHtml + "<br />" + deficitHtml + "<br />" + remainderHtml;
 }
 
+// ===== Click-to-Edit Badge =====
+function badgeClickToEdit(spanId, onCommit) {
+	var span = document.getElementById(spanId);
+	if (!span || span.querySelector('input')) return;
+	var oldVal = Number(span.innerHTML) || 0;
+	var input = document.createElement('input');
+	input.type = 'number';
+	input.value = oldVal;
+	input.min = 0;
+	input.step = FRAGMENT_UNIT;
+	input.style.cssText = 'width:60px;font-size:12px;text-align:center;';
+	function commit() {
+		var raw = Math.max(0, parseInt(input.value, 10) || 0);
+		var snapped = Math.round(raw / FRAGMENT_UNIT) * FRAGMENT_UNIT;
+		span.innerHTML = snapped || '';
+		onCommit(snapped, oldVal);
+	}
+	input.addEventListener('blur', commit);
+	input.addEventListener('keydown', function(e) {
+		if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
+	});
+	span.innerHTML = '';
+	span.appendChild(input);
+	input.focus();
+	input.select();
+}
+window.badgeClickToEdit = badgeClickToEdit;
+
 // ===== Shared UI: Shop Skill Selector Grid =====
 function buildShopSelector(fragmentMap, disabledSkillId, minusFn, plusFn, spanPrefix) {
 	var sortedSkills = JSON.parse(JSON.stringify(skills));
@@ -524,7 +553,8 @@ function buildShopSelector(fragmentMap, disabledSkillId, minusFn, plusFn, spanPr
 			html += '<span class=' + colors[sortedSkills[j].type] + '>' + sortedSkills[j].name + '</span>';
 			html += ' <button onclick="' + minusFn + '(' + skillId + ')"' + disabledAttr + '>-</button>';
 			html += '<button onclick="' + plusFn + '(' + skillId + ')"' + disabledAttr + '>+</button>';
-			html += ' <span id="' + spanPrefix + skillId + '" class="badge text-bg-secondary">' + amount + '</span>';
+			var editFn = "badgeClickToEdit('" + spanPrefix + skillId + "'," + spanPrefix + "Edit)";
+			html += ' <span id="' + spanPrefix + skillId + '" class="badge text-bg-secondary" style="cursor:pointer" onclick="' + editFn + '">' + amount + '</span>';
 		}
 		html += '</div>';
 	}
@@ -598,6 +628,12 @@ function slonchanged() {
 	refreshspsrcbtn();
 }
 
+function srEdit(newVal, oldVal) {
+	var diff = newVal - oldVal;
+	$('#ssrccnt')[0].innerHTML = Number($('#ssrccnt')[0].innerHTML) - diff;
+	refreshspsrcbtn();
+}
+
 function sronminus(v) {
 	var val = Number($('#sr' + v)[0].innerHTML);
 	if (val > 0) {
@@ -615,6 +651,10 @@ function sronplus(v) {
 }
 
 // ===== Fragment Selection Handlers =====
+function sfEdit() {
+	// No counter to update for fragment panel
+}
+
 function sfonminus(v) {
 	var val = Number($('#sf' + v)[0].innerHTML);
 	if (val > 0) {
@@ -639,8 +679,10 @@ window.sponchanged = sponchanged;
 window.slonchanged = slonchanged;
 window.sronminus = sronminus;
 window.sronplus = sronplus;
+window.srEdit = srEdit;
 window.sfonminus = sfonminus;
 window.sfonplus = sfonplus;
+window.sfEdit = sfEdit;
 window.tponchanged = tponchanged;
 
 // ===== jQuery Event Bindings =====
