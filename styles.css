@@ -393,6 +393,80 @@ h1, h2, h3, h4, h5, h6 {
   display: none;
 }
 
+/* ── Report Row: Summary + Character ─────────────────────────── */
+.report-row {
+  display: flex;
+  gap: var(--space-3);
+  align-items: stretch;
+}
+
+.report-row #tsum {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Character Panel — Live2D-style animated canvas */
+.character-panel {
+  flex: 0 0 180px;
+  width: 180px;
+  position: relative;
+  overflow: hidden;
+  min-height: 300px;
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    black 6%,
+    black 72%,
+    transparent 100%
+  );
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    black 6%,
+    black 72%,
+    transparent 100%
+  );
+}
+
+.character-panel canvas {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.character-glow {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 50%;
+  background: linear-gradient(
+    to top,
+    var(--surface-primary) 0%,
+    rgba(232, 91, 84, 0.08) 30%,
+    transparent 100%
+  );
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Hide character when report is empty */
+.report-row:not(:has(#tsum:not(:empty))) .character-panel {
+  display: none;
+}
+
+@media (max-width: 767px) {
+  .report-row {
+    flex-direction: column;
+  }
+
+  .character-panel {
+    flex: 0 0 auto;
+    height: 200px;
+    min-height: 200px;
+  }
+}
+
 /* ── Buttons ──────────────────────────────────────────────────── */
 .btn-primary {
   background-color: var(--accent-primary);
