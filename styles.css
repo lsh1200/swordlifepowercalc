@@ -415,15 +415,15 @@ h1, h2, h3, h4, h5, h6 {
   mask-image: linear-gradient(
     to bottom,
     transparent 0%,
-    black 6%,
-    black 72%,
+    black 4%,
+    black 85%,
     transparent 100%
   );
   -webkit-mask-image: linear-gradient(
     to bottom,
     transparent 0%,
-    black 6%,
-    black 72%,
+    black 4%,
+    black 85%,
     transparent 100%
   );
 }
