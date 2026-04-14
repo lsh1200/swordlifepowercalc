@@ -720,22 +720,24 @@ function refreshDirtyIndicators() {
 // ===== jQuery Event Bindings =====
 
 // Hidden event listeners — mark dirty if not saved
-$('#ssel').on('hidden.bs.offcanvas', function() {
+// NOTE: Bootstrap 5 fires custom events via native dispatchEvent(),
+// so we must use addEventListener, not jQuery .on()
+document.getElementById('ssel').addEventListener('hidden.bs.offcanvas', function() {
 	if (!savedFlag) { dirtySource = true; dirtySourceIdx = currentSourceIdx; }
 	savedFlag = false;
 	refreshDirtyIndicators();
 });
-$('#fsel').on('hidden.bs.offcanvas', function() {
+document.getElementById('fsel').addEventListener('hidden.bs.offcanvas', function() {
 	if (!savedFlag) { dirtyFrag = true; }
 	savedFlag = false;
 	refreshDirtyIndicators();
 });
-$('#tsel').on('hidden.bs.offcanvas', function() {
+document.getElementById('tsel').addEventListener('hidden.bs.offcanvas', function() {
 	if (!savedFlag) { dirtyTarget = true; }
 	savedFlag = false;
 	refreshDirtyIndicators();
 });
-$('#ksel').on('hidden.bs.offcanvas', function() {
+document.getElementById('ksel').addEventListener('hidden.bs.offcanvas', function() {
 	if (!savedFlag) { dirtyKeep = true; }
 	savedFlag = false;
 	refreshDirtyIndicators();
