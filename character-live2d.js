@@ -95,19 +95,19 @@
       }
     }
 
-    // Displacement — strong flowing distortion for hair/robes
+    // Displacement — flowing hair and robes
     if (dispFilter) {
-      dispFilter.scale.x = 20 + Math.sin(time * 1.3) * 15;
-      dispFilter.scale.y = 12 + Math.cos(time * 1.8) * 10;
+      dispFilter.scale.x = 12 + Math.sin(time * 1.3) * 8;
+      dispFilter.scale.y = 8 + Math.cos(time * 1.8) * 6;
       if (isHovering) {
-        dispFilter.scale.x *= 1.5;
-        dispFilter.scale.y *= 1.5;
+        dispFilter.scale.x *= 1.8;
+        dispFilter.scale.y *= 1.8;
       }
     }
 
     if (dispSprite) {
-      dispSprite.x = Math.sin(time * 0.5) * 12;
-      dispSprite.y = Math.cos(time * 0.8) * 10;
+      dispSprite.x = Math.sin(time * 0.5) * 10;
+      dispSprite.y = Math.cos(time * 0.8) * 8;
     }
   }
 
