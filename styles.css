@@ -515,13 +515,14 @@ h1, h2, h3, h4, h5, h6 {
   background-position: center;
   background-repeat: no-repeat;
   background-size: cover;
+  box-shadow: 4px 0 0 0 #1a1a1e, -4px 0 0 0 #1a1a1e;
 }
 
 #ssel::before, #fsel::before, #ksel::before {
   content: '';
   position: absolute;
-  inset: -1px;
-  background: rgba(26, 26, 30, 0.94);
+  inset: -4px;
+  background: rgba(26, 26, 30, 0.96);
   z-index: 0;
   pointer-events: none;
 }
@@ -536,13 +537,14 @@ h1, h2, h3, h4, h5, h6 {
   background-position: center;
   background-repeat: no-repeat;
   background-size: cover;
+  box-shadow: -4px 0 0 0 #1a1a1e, 4px 0 0 0 #1a1a1e;
 }
 
 #tsel::before {
   content: '';
   position: absolute;
-  inset: -1px;
-  background: rgba(26, 26, 30, 0.94);
+  inset: -4px;
+  background: rgba(26, 26, 30, 0.96);
   z-index: 0;
   pointer-events: none;
 }
