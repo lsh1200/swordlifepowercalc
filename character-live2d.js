@@ -62,7 +62,8 @@
     // Scale to fit panel width
     var scale = s.w / tw;
     sprite.scale.set(scale);
-    sprite.x = s.w / 2;
+    // Shift right so left side (hair/robes) doesn't overflow into report
+    sprite.x = s.w * 0.55;
     sprite.y = 0;
   }
 
@@ -83,7 +84,7 @@
 
       // Side-to-side rocking — clearly visible
       var drift = Math.sin(time * 0.7) * 6;
-      sprite.x = s.w / 2 + drift;
+      sprite.x = s.w * 0.55 + drift;
 
       // Vertical float — gentle bobbing from top
       var bob = Math.sin(time * 1.0) * 3;
