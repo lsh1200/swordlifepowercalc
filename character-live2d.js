@@ -97,19 +97,19 @@
       }
     }
 
-    // Displacement — flowing hair and robes
+    // Displacement — hair/cloth flow (face/body protected by displacement map)
     if (dispFilter) {
-      dispFilter.scale.x = 12 + Math.sin(time * 1.3) * 8;
-      dispFilter.scale.y = 8 + Math.cos(time * 1.8) * 6;
+      dispFilter.scale.x = 8 + Math.sin(time * 1.3) * 5;
+      dispFilter.scale.y = 5 + Math.cos(time * 1.8) * 3;
       if (isHovering) {
-        dispFilter.scale.x *= 1.8;
-        dispFilter.scale.y *= 1.8;
+        dispFilter.scale.x *= 1.5;
+        dispFilter.scale.y *= 1.5;
       }
     }
 
     if (dispSprite) {
-      dispSprite.x = Math.sin(time * 0.5) * 10;
-      dispSprite.y = Math.cos(time * 0.8) * 8;
+      dispSprite.x = Math.sin(time * 0.5) * 6;
+      dispSprite.y = Math.cos(time * 0.8) * 4;
     }
   }
 
