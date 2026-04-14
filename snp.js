@@ -726,6 +726,7 @@ document.getElementById('ssel').addEventListener('hidden.bs.offcanvas', function
 	if (!savedFlag) { dirtySource = true; dirtySourceIdx = currentSourceIdx; }
 	savedFlag = false;
 	refreshDirtyIndicators();
+	document.title = '[HIDE] dirty=' + dirtySource + ' idx=' + dirtySourceIdx + ' t=' + Date.now();
 });
 document.getElementById('fsel').addEventListener('hidden.bs.offcanvas', function() {
 	if (!savedFlag) { dirtyFrag = true; }
@@ -787,9 +788,9 @@ $('#stbl > tbody > tr').on('click', function(e) {
 
 	if (dirtySource && String(dirtySourceIdx) === String(clickedIdx)) {
 		// Same row with unsaved changes — reopen without resetting
-		document.title = 'GUARD HIT dirtyIdx=' + dirtySourceIdx + ' clicked=' + clickedIdx;
+		document.title = '[OPEN] HIT idx=' + dirtySourceIdx + ' click=' + clickedIdx + ' t=' + Date.now();
 	} else {
-		document.title = 'GUARD MISS dirty=' + dirtySource + ' dirtyIdx=' + dirtySourceIdx + ' clicked=' + clickedIdx;
+		document.title = '[OPEN] MISS dirty=' + dirtySource + ' idx=' + dirtySourceIdx + ' click=' + clickedIdx + ' t=' + Date.now();
 		currentSourceIdx = clickedIdx;
 
 		$('#sl1')[0].innerHTML = '';
