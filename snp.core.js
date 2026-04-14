@@ -1,8 +1,8 @@
 // Testable extraction of pure data and calculation logic from snp.js
 // This file mirrors the exact data and algorithms so tests catch regressions.
 
-const shops = ["道蘊商店", "論劍商店", "諸天商會", "宗門寶庫", "煞海寶箱"];
-const bounds = ["人界", "魔界", "煞海"];
+const shops = ["道蘊商店", "論劍商店", "諸天商會", "宗門寶庫", "百族寶箱"];
+const bounds = ["人界", "返虛", "煞海", "合體", "蠱族"];
 const types = ["火", "劍", "雷", "百族"];
 
 const levels = [
@@ -47,7 +47,37 @@ const levels = [
 		{n:"地3", f:600 , g:2000, p:3100, b:7950 },
 		{n:"天1", f:800 , g:2560, p:4000, b:10150},
 		{n:"天2", f:1040, g:3200, p:5000, b:12650},
-		{n:"天3", f:1320, g:3920, p:6200, b:15450}]
+		{n:"天3", f:1320, g:3920, p:6200, b:15450}],
+	[
+		{n:"無" , f:0   , g:0   , p:0   , b:0    },
+		{n:"1星", f:40  , g:0   , p:0   , b:0    },
+		{n:"2星", f:40  , g:120 , p:100 , b:200  },
+		{n:"3星", f:40  , g:240 , p:200 , b:400  },
+		{n:"玄1", f:80  , g:360 , p:350 , b:750  },
+		{n:"玄2", f:160 , g:480 , p:550 , b:1250 },
+		{n:"玄3", f:240 , g:640 , p:800 , b:1900 },
+		{n:"地1", f:360 , g:840 , p:1150, b:2800 },
+		{n:"地2", f:480 , g:1080, p:1650, b:4000 },
+		{n:"地3", f:640 , g:1360, p:2250, b:5500 },
+		{n:"天1", f:840 , g:1720, p:2950, b:7300 },
+		{n:"天2", f:1080, g:2160, p:3750, b:9400 },
+		{n:"天3", f:1360, g:2680, p:4750, b:11800},
+		{n:"天4", f:1680, g:3280, p:5750, b:14200},
+		{n:"天5", f:2040, g:3960, p:6750, b:16600}],
+	[
+		{n:"無" , f:0   , g:0   , p:0   , b:0    },
+		{n:"1星", f:40  , g:0   , p:0   , b:0    },
+		{n:"2星", f:40  , g:160 , p:100 , b:300  },
+		{n:"3星", f:40  , g:320 , p:250 , b:650  },
+		{n:"玄1", f:80  , g:520 , p:500 , b:1250 },
+		{n:"玄2", f:160 , g:720 , p:800 , b:2050 },
+		{n:"玄3", f:240 , g:1000, p:1250, b:3150 },
+		{n:"地1", f:320 , g:1360, p:1750, b:4450 },
+		{n:"地2", f:440 , g:1800, p:2350, b:6050 },
+		{n:"地3", f:600 , g:2320, p:3100, b:7950 },
+		{n:"天1", f:800 , g:2920, p:4000, b:10150},
+		{n:"天2", f:1040, g:3600, p:5000, b:12650},
+		{n:"天3", f:1320, g:4360, p:6200, b:15450}]
 ];
 
 const skills = [
@@ -91,6 +121,22 @@ const skills = [
 	{id:37, name:"冥火", shop:4, bound:2, type:3},
 	{id:38, name:"業蓮", shop:4, bound:2, type:3},
 	{id:39, name:"裂天", shop:4, bound:2, type:3},
+	{id:40, name:"陽隕", shop:0, bound:3, type:0},
+	{id:41, name:"巡日", shop:1, bound:3, type:0},
+	{id:42, name:"炎爆", shop:2, bound:3, type:0},
+	{id:43, name:"星燎", shop:3, bound:3, type:0},
+	{id:44, name:"玄峰", shop:0, bound:3, type:1},
+	{id:45, name:"貫日", shop:1, bound:3, type:1},
+	{id:46, name:"鎮岳", shop:2, bound:3, type:1},
+	{id:47, name:"破月", shop:3, bound:3, type:1},
+	{id:48, name:"天怒", shop:0, bound:3, type:2},
+	{id:49, name:"嵐霆", shop:1, bound:3, type:2},
+	{id:50, name:"鬥辰", shop:2, bound:3, type:2},
+	{id:51, name:"崩雲", shop:3, bound:3, type:2},
+	{id:52, name:"幽蝕", shop:4, bound:4, type:3},
+	{id:53, name:"驚蟬", shop:4, bound:4, type:3},
+	{id:54, name:"蛻蛇", shop:4, bound:4, type:3},
+	{id:55, name:"祭律", shop:4, bound:4, type:3}
 ];
 
 /**

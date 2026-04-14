@@ -4,12 +4,13 @@
 // ===== Constants =====
 var SLOT_COUNT = 6;
 var FRAGMENT_UNIT = 40;
+var SKILLS_PER_SHOP = 12;
 
 // ===== Game Data =====
 // Level data keys: n=name, f=body fragments (本體殘卷), g=other fragments (仙品殘卷),
 //                  p=purple scrolls (極品殘卷), b=blue scrolls (上品殘卷)
-var shops = ["道蘊商店", "論劍商店", "諸天商會", "宗門寶庫", "煞海寶箱"];
-var bounds = ["人界", "魔界", "煞海"];
+var shops = ["道蘊商店", "論劍商店", "諸天商會", "宗門寶庫", "百族寶箱"];
+var bounds = ["人界", "返虛", "煞海", "合體", "蠱族"];
 var types = ["火", "劍", "雷", "百族"];
 var colors = ["text-danger", "text-warning", "text-primary", "text-black"];
 
@@ -55,7 +56,37 @@ var levels = [
 		{n:"地3", f:600 , g:2000, p:3100, b:7950 },
 		{n:"天1", f:800 , g:2560, p:4000, b:10150},
 		{n:"天2", f:1040, g:3200, p:5000, b:12650},
-		{n:"天3", f:1320, g:3920, p:6200, b:15450}]
+		{n:"天3", f:1320, g:3920, p:6200, b:15450}],
+	[
+		{n:"無" , f:0   , g:0   , p:0   , b:0    },
+		{n:"1星", f:40  , g:0   , p:0   , b:0    },
+		{n:"2星", f:40  , g:120 , p:100 , b:200  },
+		{n:"3星", f:40  , g:240 , p:200 , b:400  },
+		{n:"玄1", f:80  , g:360 , p:350 , b:750  },
+		{n:"玄2", f:160 , g:480 , p:550 , b:1250 },
+		{n:"玄3", f:240 , g:640 , p:800 , b:1900 },
+		{n:"地1", f:360 , g:840 , p:1150, b:2800 },
+		{n:"地2", f:480 , g:1080, p:1650, b:4000 },
+		{n:"地3", f:640 , g:1360, p:2250, b:5500 },
+		{n:"天1", f:840 , g:1720, p:2950, b:7300 },
+		{n:"天2", f:1080, g:2160, p:3750, b:9400 },
+		{n:"天3", f:1360, g:2680, p:4750, b:11800},
+		{n:"天4", f:1680, g:3280, p:5750, b:14200},
+		{n:"天5", f:2040, g:3960, p:6750, b:16600}],
+	[
+		{n:"無" , f:0   , g:0   , p:0   , b:0    },
+		{n:"1星", f:40  , g:0   , p:0   , b:0    },
+		{n:"2星", f:40  , g:160 , p:100 , b:300  },
+		{n:"3星", f:40  , g:320 , p:250 , b:650  },
+		{n:"玄1", f:80  , g:520 , p:500 , b:1250 },
+		{n:"玄2", f:160 , g:720 , p:800 , b:2050 },
+		{n:"玄3", f:240 , g:1000, p:1250, b:3150 },
+		{n:"地1", f:320 , g:1360, p:1750, b:4450 },
+		{n:"地2", f:440 , g:1800, p:2350, b:6050 },
+		{n:"地3", f:600 , g:2320, p:3100, b:7950 },
+		{n:"天1", f:800 , g:2920, p:4000, b:10150},
+		{n:"天2", f:1040, g:3600, p:5000, b:12650},
+		{n:"天3", f:1320, g:4360, p:6200, b:15450}]
 ];
 
 var skills = [
@@ -98,14 +129,28 @@ var skills = [
 	{id:36, name:"烈雨", shop:4, bound:2, type:3},
 	{id:37, name:"冥火", shop:4, bound:2, type:3},
 	{id:38, name:"業蓮", shop:4, bound:2, type:3},
-	{id:39, name:"裂天", shop:4, bound:2, type:3}
+	{id:39, name:"裂天", shop:4, bound:2, type:3},
+	{id:40, name:"陽隕", shop:0, bound:3, type:0},
+	{id:41, name:"巡日", shop:1, bound:3, type:0},
+	{id:42, name:"炎爆", shop:2, bound:3, type:0},
+	{id:43, name:"星燎", shop:3, bound:3, type:0},
+	{id:44, name:"玄峰", shop:0, bound:3, type:1},
+	{id:45, name:"貫日", shop:1, bound:3, type:1},
+	{id:46, name:"鎮岳", shop:2, bound:3, type:1},
+	{id:47, name:"破月", shop:3, bound:3, type:1},
+	{id:48, name:"天怒", shop:0, bound:3, type:2},
+	{id:49, name:"嵐霆", shop:1, bound:3, type:2},
+	{id:50, name:"鬥辰", shop:2, bound:3, type:2},
+	{id:51, name:"崩雲", shop:3, bound:3, type:2},
+	{id:52, name:"幽蝕", shop:4, bound:4, type:3},
+	{id:53, name:"驚蟬", shop:4, bound:4, type:3},
+	{id:54, name:"蛻蛇", shop:4, bound:4, type:3},
+	{id:55, name:"祭律", shop:4, bound:4, type:3}
 ];
 
 // ===== Application State =====
 var source, frags, fragp, fragb, target;
-// Shared between #stbl click handler (sets) and #ssub click handler (reads)
 var currentSourceIdx;
-// Shared between panel open handlers and their submit handlers
 var sourceOffcanvas, targetOffcanvas;
 
 // ===== URL Data Validation =====
@@ -169,12 +214,20 @@ function refreshdata() {
 		fragb = data.fragb;
 		target = data.target;
 	} else {
-		source = JSON.parse('[{"id":29,"level":5,"src":[{"id":18,"amount":80},{"id":22,"amount":120},{"id":31,"amount":40},{"id":34,"amount":40},{"id":37,"amount":40}],"sm":{}},{"id":26,"level":5,"src":[{"id":8,"amount":40},{"id":10,"amount":120},{"id":18,"amount":80},{"id":20,"amount":40},{"id":39,"amount":40}]},{"id":28,"level":7,"src":[{"id":0,"amount":80},{"id":8,"amount":40},{"id":10,"amount":240},{"id":15,"amount":40},{"id":19,"amount":40},{"id":20,"amount":40},{"id":21,"amount":40},{"id":30,"amount":40},{"id":31,"amount":40}]},{"id":1,"level":7,"src":[{"id":23,"amount":40},{"id":36,"amount":40},{"id":37,"amount":40}]},{"id":9,"level":10,"src":[{"id":23,"amount":40},{"id":26,"amount":80},{"id":28,"amount":200}]},{"id":11,"level":12,"src":[{"id":2,"amount":40},{"id":19,"amount":160},{"id":27,"amount":40},{"id":31,"amount":80},{"id":37,"amount":80},{"id":38,"amount":40},{"id":39,"amount":120}]}]');
-		frags = JSON.parse('[{"id":8,"amount":160},{"id":9,"amount":40},{"id":26,"amount":40},{"id":29,"amount":80},{"id":35,"amount":40}]');
-		fragp = 110;
-		fragb = 445;
-		target = JSON.parse('[{"id":26,"level":6},{"id":34,"level":6},{"id":20,"level":10},{"id":1,"level":6},{"id":32,"level":6},{"id":35,"level":7}]');
+		source = JSON.parse('[{"id":47,"level":4,"src":[{"id":15,"amount":80},{"id":28,"amount":120},{"id":45,"amount":160}]},{"id":49,"level":7,"src":[{"id":14,"amount":120},{"id":20,"amount":80},{"id":29,"amount":80},{"id":38,"amount":320},{"id":39,"amount":80},{"id":45,"amount":120},{"id":55,"amount":40}]},{"id":50,"level":7,"src":[{"id":14,"amount":400},{"id":28,"amount":40},{"id":31,"amount":360},{"id":53,"amount":40}]},{"id":46,"level":9,"src":[{"id":20,"amount":400},{"id":21,"amount":480},{"id":35,"amount":120},{"id":37,"amount":160},{"id":39,"amount":160},{"id":53,"amount":40}]},{"id":9,"level":12,"src":[{"id":11,"amount":40},{"id":21,"amount":120},{"id":28,"amount":80},{"id":29,"amount":80},{"id":32,"amount":240}]},{"id":11,"level":12,"src":[{"id":28,"amount":80},{"id":31,"amount":480}]}]');
+		frags = JSON.parse('[{"id":0,"amount":680},{"id":28,"amount":120},{"id":29,"amount":280},{"id":35,"amount":280},{"id":36,"amount":80},{"id":47,"amount":40}]');
+		fragp = 3031;
+		fragb = 8650;
+		target = JSON.parse('[{"id":47,"level":6},{"id":49,"level":7},{"id":50,"level":9},{"id":46,"level":10},{"id":9,"level":12},{"id":11,"level":12}]');
 	}
+}
+
+// ===== Display Name Helper =====
+function getSkillDisplayName(sk) {
+	var name = sk.name;
+	if (sk.bound === 1 || sk.bound === 2) name += " (魔)";
+	if (sk.bound === 3 || sk.bound === 4) name += " (蠱)";
+	return name;
 }
 
 // ===== View: Source Powers Table =====
@@ -266,8 +319,8 @@ function refreshtargetpowerview() {
 // ===== Core Computation =====
 function computesuperpower() {
 	var totalGold = 0;
-	var totalPurple = 0;
-	var totalBlue = 0;
+	var totalPurple = fragp;
+	var totalBlue = fragb;
 
 	// Phase 1: Tally all available fragments
 	var fragmentMap = new Map();
@@ -391,10 +444,10 @@ function buildShopSelector(fragmentMap, disabledSkillId, minusFn, plusFn, spanPr
 	});
 
 	var html = '<div class="row">';
-	for (var i = 0; i < sortedSkills.length; i += 9) {
+	for (var i = 0; i < sortedSkills.length; i += SKILLS_PER_SHOP) {
 		html += '<div class="col col-md-6 px-2 mx-0 my-1 border align-start" style="min-width:120px; background-color: rgba(255, 255, 255, 0.9);">';
 		html += '<h6 class="my-1">' + shops[sortedSkills[i].shop] + ' </h6><hr class="divider my-2">';
-		for (var j = i; j < Math.min(i + 9, sortedSkills.length); j++) {
+		for (var j = i; j < Math.min(i + SKILLS_PER_SHOP, sortedSkills.length); j++) {
 			var skillId = sortedSkills[j].id;
 			var amount = fragmentMap.has(skillId) ? fragmentMap.get(skillId) : "";
 			var isDisabled = (disabledSkillId === skillId);
@@ -419,6 +472,35 @@ function refreshspsrcbtn() {
 	$('#ssub').prop('disabled', Number($('#ssrccnt')[0].innerHTML) !== 0);
 }
 
+// ===== Dynamic Level Dropdown: Target =====
+function refreshtargetlevel(i, id) {
+	var oldValue = Number($('#tll' + i)[0].value);
+	var skill = skills[id];
+	$('#tll' + i)[0].innerHTML = '';
+	for (var j = 1; j < levels[skill.bound].length; j++) {
+		var isSelected = (j === oldValue);
+		if (j === levels[skill.bound].length - 1 && j < oldValue) {
+			isSelected = true;
+		}
+		$('#tll' + i)[0].innerHTML += "<option value='" + j + "'" + (isSelected ? "selected" : "") + ">" + levels[skill.bound][j].n + "</option>";
+	}
+}
+
+// ===== Dynamic Level Dropdown: Source =====
+function refresholdlevel(id) {
+	var oldValue = Number($('#sll1')[0].value);
+	var skill = skills[id];
+	$('#sll1')[0].innerHTML = '';
+	for (var j = 1; j < levels[skill.bound].length; j++) {
+		var isSelected = (j === oldValue);
+		if (j === levels[skill.bound].length - 1 && j < oldValue) {
+			isSelected = true;
+		}
+		$('#sll1')[0].innerHTML += "<option value='" + j + "'" + (isSelected ? "selected" : "") + ">" + levels[skill.bound][j].n + "</option>";
+	}
+	slonchanged();
+}
+
 // ===== Source Power Selection Handlers =====
 function sponchanged() {
 	var id = $('#sl1')[0].value;
@@ -431,6 +513,9 @@ function sponchanged() {
 	}
 	$('#ssshop button').prop('disabled', false);
 	$('#src' + id + ' button').prop('disabled', true);
+
+	refresholdlevel(id);
+
 	$('#sr' + id)[0].innerHTML = levels[skills[id].bound][lv].f - FRAGMENT_UNIT;
 	$('#ssrccnt')[0].innerHTML = levels[skills[id].bound][lv].g;
 	refreshspsrcbtn();
@@ -481,6 +566,7 @@ function tponchanged(i) {
 	var skillId = Number($('#tl' + i)[0].value);
 	colors.forEach(function(c) { $('#tl' + i).removeClass(c); });
 	$('#tl' + i).addClass(colors[skills[skillId].type]);
+	refreshtargetlevel(i, skillId);
 }
 
 // ===== Expose onclick handlers to window =====
@@ -502,8 +588,7 @@ $('#ttbl > tbody > tr').on('click', function() {
 		$('#tl' + i).addClass(colors[skills[target[i].id].type]);
 		skills.forEach(function(sk) {
 			var isSelected = (target[i].id === sk.id);
-			var displayName = sk.name + (sk.bound ? " (魔)" : "");
-			$('#tl' + i)[0].innerHTML += "<option class='" + colors[sk.type] + "' value='" + sk.id + "'" + (isSelected ? "selected" : "") + ">" + displayName + "</option>";
+			$('#tl' + i)[0].innerHTML += "<option class='" + colors[sk.type] + "' value='" + sk.id + "'" + (isSelected ? "selected" : "") + ">" + getSkillDisplayName(sk) + "</option>";
 		});
 		$('#tll' + i)[0].innerHTML = '';
 		var skill = skills[target[i].id];
@@ -538,8 +623,7 @@ $('#stbl > tbody > tr').on('click', function(e) {
 	$('#sl1').addClass(colors[skills[source[currentSourceIdx].id].type]);
 	skills.forEach(function(sk) {
 		var isSelected = (source[currentSourceIdx].id === sk.id);
-		var displayName = sk.name + (sk.bound ? " (魔)" : "");
-		$('#sl1')[0].innerHTML += "<option class='" + colors[sk.type] + "' value='" + sk.id + "'" + (isSelected ? "selected" : "") + ">" + displayName + "</option>";
+		$('#sl1')[0].innerHTML += "<option class='" + colors[sk.type] + "' value='" + sk.id + "'" + (isSelected ? "selected" : "") + ">" + getSkillDisplayName(sk) + "</option>";
 	});
 
 	$('#sll1')[0].innerHTML = '';
@@ -581,7 +665,7 @@ $('#ssub').on('click', function() {
 });
 
 // Fragment row click — open fragment selection panel
-$('#sf1').on('click', function() {
+$('#sfs').on('click', function() {
 	var fragMap = new Map();
 	frags.forEach(function(item) {
 		fragMap.set(item.id, item.amount);
