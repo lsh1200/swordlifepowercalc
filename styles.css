@@ -407,11 +407,11 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Character Panel — Live2D-style animated canvas */
 .character-panel {
-  flex: 0 0 180px;
-  width: 180px;
+  flex: 0 0 240px;
+  width: 240px;
   position: relative;
   overflow: hidden;
-  min-height: 300px;
+  min-height: 340px;
   mask-image: linear-gradient(
     to bottom,
     transparent 0%,
@@ -432,8 +432,6 @@ h1, h2, h3, h4, h5, h6 {
   display: block;
   width: 100% !important;
   height: 100% !important;
-  image-rendering: -webkit-optimize-contrast;
-  image-rendering: crisp-edges;
 }
 
 .character-glow {
