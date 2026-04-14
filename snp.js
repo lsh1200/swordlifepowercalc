@@ -223,7 +223,7 @@ function refreshdata() {
 		keep = Array.isArray(data.keep) ? data.keep : [];
 	} else {
 		source = JSON.parse('[{"id":47,"level":4,"src":[{"id":15,"amount":80},{"id":28,"amount":120},{"id":45,"amount":160}]},{"id":49,"level":7,"src":[{"id":14,"amount":120},{"id":20,"amount":80},{"id":29,"amount":80},{"id":38,"amount":320},{"id":39,"amount":80},{"id":45,"amount":120},{"id":55,"amount":40}]},{"id":50,"level":7,"src":[{"id":14,"amount":400},{"id":28,"amount":40},{"id":31,"amount":360},{"id":53,"amount":40}]},{"id":46,"level":9,"src":[{"id":20,"amount":400},{"id":21,"amount":480},{"id":35,"amount":120},{"id":37,"amount":160},{"id":39,"amount":160},{"id":53,"amount":40}]},{"id":9,"level":12,"src":[{"id":11,"amount":40},{"id":21,"amount":120},{"id":28,"amount":80},{"id":29,"amount":80},{"id":32,"amount":240}]},{"id":11,"level":12,"src":[{"id":28,"amount":80},{"id":31,"amount":480}]}]');
-		frags = JSON.parse('[{"id":0,"amount":680},{"id":28,"amount":120},{"id":29,"amount":280},{"id":35,"amount":280},{"id":36,"amount":80},{"id":47,"amount":40}]');
+		frags = JSON.parse('[{"id":10,"amount":680},{"id":28,"amount":120},{"id":29,"amount":280},{"id":35,"amount":280},{"id":36,"amount":80},{"id":47,"amount":40}]');
 		fragp = 3031;
 		fragb = 8650;
 		target = JSON.parse('[{"id":47,"level":6},{"id":49,"level":7},{"id":50,"level":9},{"id":46,"level":10},{"id":9,"level":12},{"id":11,"level":12}]');

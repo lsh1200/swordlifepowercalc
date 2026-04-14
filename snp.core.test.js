@@ -15,7 +15,7 @@ const defaultSource = [
 	{id:9, level:12, src:[{id:11, amount:40},{id:21, amount:120},{id:28, amount:80},{id:29, amount:80},{id:32, amount:240}]},
 	{id:11, level:12, src:[{id:28, amount:80},{id:31, amount:480}]}
 ];
-const defaultFrags = [{id:0, amount:680},{id:28, amount:120},{id:29, amount:280},{id:35, amount:280},{id:36, amount:80},{id:47, amount:40}];
+const defaultFrags = [{id:10, amount:680},{id:28, amount:120},{id:29, amount:280},{id:35, amount:280},{id:36, amount:80},{id:47, amount:40}];
 const defaultFragp = 3031;
 const defaultFragb = 8650;
 const defaultTarget = [{id:47, level:6},{id:49, level:7},{id:50, level:9},{id:46, level:10},{id:9, level:12},{id:11, level:12}];
