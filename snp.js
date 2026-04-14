@@ -747,6 +747,8 @@ function refreshDirtyIndicators() {
 	var srcDirty = dirtySource || dirtyFrag || dirtyKeep;
 	var srcEl = $('#srcDirty')[0];
 	var tgtEl = $('#tgtDirty')[0];
+	var srcBtn = $('#srcDiscard')[0];
+	var tgtBtn = $('#tgtDiscard')[0];
 	if (srcDirty) {
 		var parts = [];
 		if (dirtySource) parts.push('神通#' + (Number(dirtySourceIdx) + 1));
@@ -754,11 +756,30 @@ function refreshDirtyIndicators() {
 		if (dirtyKeep) parts.push('保留');
 		srcEl.textContent = ' (未保存: ' + parts.join(', ') + ')';
 		srcEl.style.display = 'inline';
+		srcBtn.style.display = 'inline';
 	} else {
 		srcEl.style.display = 'none';
+		srcBtn.style.display = 'none';
 	}
 	tgtEl.style.display = dirtyTarget ? 'inline' : 'none';
+	tgtBtn.style.display = dirtyTarget ? 'inline' : 'none';
 }
+
+function discardSource() {
+	dirtySource = false;
+	dirtySourceIdx = -1;
+	dirtyFrag = false;
+	dirtyKeep = false;
+	refreshDirtyIndicators();
+}
+
+function discardTarget() {
+	dirtyTarget = false;
+	refreshDirtyIndicators();
+}
+
+window.discardSource = discardSource;
+window.discardTarget = discardTarget;
 
 // ===== jQuery Event Bindings =====
 
