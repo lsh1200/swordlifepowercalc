@@ -507,7 +507,7 @@ h1, h2, h3, h4, h5, h6 {
 .offcanvas {
   background-color: var(--surface-secondary) !important;
   color: var(--text-primary);
-  border-color: var(--line-primary) !important;
+  border: none !important;
 }
 
 #ssel, #fsel, #ksel {
