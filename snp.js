@@ -160,6 +160,49 @@ var dirtyTarget = false;
 var dirtyKeep = false;
 var savedFlag = false; // set true right before hide when saving
 
+// Snapshots of panel state when opened (to detect actual changes)
+var snapSource = null; // {sl1, sll1, badges}
+var snapFrag = null;   // {badges, fragp, fragb}
+var snapTarget = null; // [{tl, tll}, ...]
+var snapKeep = null;   // [checked ids]
+
+function snapshotSource() {
+	var badges = {};
+	for (var i = 0; i < skills.length; i++) {
+		var v = $('#sr' + i)[0].innerHTML.trim();
+		if (v !== '') badges[i] = v;
+	}
+	return { sl1: $('#sl1')[0].value, sll1: $('#sll1')[0].value, badges: JSON.stringify(badges) };
+}
+function snapshotFrag() {
+	var badges = {};
+	for (var i = 0; i < skills.length; i++) {
+		var v = $('#sf' + i)[0].innerHTML.trim();
+		if (v !== '') badges[i] = v;
+	}
+	return { badges: JSON.stringify(badges), fragp: $('#fragpcnt')[0].value, fragb: $('#fragbcnt')[0].value };
+}
+function snapshotTarget() {
+	var slots = [];
+	for (var i = 0; i < SLOT_COUNT; i++) {
+		slots.push($('#tl' + i)[0].value + ':' + $('#tll' + i)[0].value);
+	}
+	return slots.join(',');
+}
+function snapshotKeep() {
+	var ids = [];
+	for (var i = 0; i < skills.length; i++) {
+		var cb = document.getElementById('kc' + i);
+		if (cb && cb.checked) ids.push(i);
+	}
+	return ids.join(',');
+}
+function snapChanged(a, b) {
+	if (typeof a === 'string') return a !== b;
+	return a.sl1 !== b.sl1 || a.sll1 !== b.sll1 || a.badges !== b.badges ||
+		a.fragp !== b.fragp || a.fragb !== b.fragb;
+}
+
 // ===== URL Data Validation =====
 function validateUrlData(data) {
 	if (!data || typeof data !== 'object') return false;
@@ -723,22 +766,24 @@ function refreshDirtyIndicators() {
 // NOTE: Bootstrap 5 fires custom events via native dispatchEvent(),
 // so we must use addEventListener, not jQuery .on()
 document.getElementById('ssel').addEventListener('hidden.bs.offcanvas', function() {
-	if (!savedFlag) { dirtySource = true; dirtySourceIdx = currentSourceIdx; }
+	if (!savedFlag && snapChanged(snapSource, snapshotSource())) {
+		dirtySource = true; dirtySourceIdx = currentSourceIdx;
+	}
 	savedFlag = false;
 	refreshDirtyIndicators();
 });
 document.getElementById('fsel').addEventListener('hidden.bs.offcanvas', function() {
-	if (!savedFlag) { dirtyFrag = true; }
+	if (!savedFlag && snapChanged(snapFrag, snapshotFrag())) { dirtyFrag = true; }
 	savedFlag = false;
 	refreshDirtyIndicators();
 });
 document.getElementById('tsel').addEventListener('hidden.bs.offcanvas', function() {
-	if (!savedFlag) { dirtyTarget = true; }
+	if (!savedFlag && snapChanged(snapTarget, snapshotTarget())) { dirtyTarget = true; }
 	savedFlag = false;
 	refreshDirtyIndicators();
 });
 document.getElementById('ksel').addEventListener('hidden.bs.offcanvas', function() {
-	if (!savedFlag) { dirtyKeep = true; }
+	if (!savedFlag && snapChanged(snapKeep, snapshotKeep())) { dirtyKeep = true; }
 	savedFlag = false;
 	refreshDirtyIndicators();
 });
@@ -764,6 +809,7 @@ $('#ttbl > tbody > tr').on('click', function() {
 	}
 	targetOffcanvas = new bootstrap.Offcanvas('#tsel');
 	targetOffcanvas.show();
+	snapTarget = snapshotTarget();
 });
 
 // Target submit
@@ -820,6 +866,7 @@ $('#stbl > tbody > tr').on('click', function() {
 
 	sourceOffcanvas = new bootstrap.Offcanvas('#ssel');
 	sourceOffcanvas.show();
+	snapSource = snapshotSource();
 });
 
 // Source submit
@@ -861,6 +908,7 @@ $('#sfs').on('click', function() {
 
 	sourceOffcanvas = new bootstrap.Offcanvas('#fsel');
 	sourceOffcanvas.show();
+	snapFrag = snapshotFrag();
 });
 
 // Fragment submit
@@ -889,6 +937,7 @@ $('#skp').on('click', function() {
 	}
 	keepOffcanvas = new bootstrap.Offcanvas('#ksel');
 	keepOffcanvas.show();
+	snapKeep = snapshotKeep();
 });
 
 // Keep submit
