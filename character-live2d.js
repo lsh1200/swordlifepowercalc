@@ -1,5 +1,5 @@
 // Character Live2D-style Animation
-// Uses PixiJS displacement filter + mesh-deformed eyelid blink
+// Uses PixiJS displacement filter + mesh eyelid overlay blink
 (function () {
   var CHAR_IMG = 'character-clean.png';
   var DISP_IMG = 'character-displacement.png';
@@ -32,7 +32,7 @@
   var sprite = null;
   var dispSprite = null;
   var dispFilter = null;
-  var eyeMeshes = [];
+  var eyeLids = [];
   var time = 0;
   var mouseX = 0;
   var mouseY = 0;
@@ -42,21 +42,31 @@
   var blinkTimer = 0;
   var blinkInterval = 2;
   var blinkPhase = 0;
-  var BLINK_SPEED = 2.2; // slower for visible anime-style blink
+  var BLINK_SPEED = 2.5;
 
-  // Eye regions in normalized image coords (0-1)
-  // Each eye: the rectangle covering from above eyelid to below eye
-  // We'll create a mesh for this region and warp the top half down to close
-  var eyeRegions = [
-    // Left eye — includes skin above + eye + skin below
-    { x: 220/591, y: 210/848, w: 85/591, h: 60/848 },
-    // Right eye
-    { x: 330/591, y: 208/848, w: 65/591, h: 60/848 }
+  // Eye definitions (normalized to image 591x848)
+  // skinRegion: the thin strip of skin ABOVE the eye (the eyelid texture source)
+  // eyeTop: where the eye opening starts (top of iris)
+  // eyeBottom: where the eye opening ends (bottom of eye)
+  var eyeDefs = [
+    { // Left eye
+      skinUV: { x: 220/591, y: 218/848, w: 85/591, h: 12/848 }, // thin skin strip above eye
+      eyeTop: 230/848,   // where eyelid starts (crease)
+      eyeBottom: 262/848, // bottom of eye opening
+      left: 220/591,
+      right: 305/591,
+    },
+    { // Right eye
+      skinUV: { x: 328/591, y: 216/848, w: 65/591, h: 12/848 },
+      eyeTop: 228/848,
+      eyeBottom: 260/848,
+      left: 328/591,
+      right: 393/591,
+    }
   ];
 
-  // How far down from the top of each eye region the "crease" is (where eyelid meets eye)
-  // Vertices above this line stay fixed; vertices below get pushed down during blink
-  var creaseRatio = 0.35; // 35% from top is the eyelid crease
+  var ROWS = 4;
+  var COLS = 4;
 
   PIXI.Assets.load([CHAR_IMG, DISP_IMG]).then(function (textures) {
     var charTex = textures[CHAR_IMG];
@@ -71,26 +81,25 @@
     app.stage.addChild(dispSprite);
     sprite.filters = [dispFilter];
 
-    // Create eye meshes — each is a SimplePlane over the eye region
-    // Using the SAME texture as the character, with UV coords for just the eye area
-    // This overlays on top of the sprite and we deform its vertices to close the eye
-    var ROWS = 6; // vertical subdivisions for smooth deformation
-    var COLS = 4; // horizontal subdivisions
+    // Create eyelid meshes — each maps UV to the skin strip above the eye
+    // The mesh starts as a thin strip at the eyelid crease
+    // During blink, the bottom vertices stretch DOWN to cover the eye
+    // Because the UV maps to skin texture, it paints skin over the eye
+    for (var e = 0; e < eyeDefs.length; e++) {
+      var def = eyeDefs[e];
 
-    for (var e = 0; e < eyeRegions.length; e++) {
-      var region = eyeRegions[e];
-
-      // Create a SimplePlane mesh
       var mesh = new PIXI.SimplePlane(charTex, COLS + 1, ROWS + 1);
       mesh.autoUpdate = true;
 
-      // Set UV coordinates to map only the eye region of the texture
+      // UV: all rows map to the same thin skin strip (repeated vertically)
+      // This makes the whole mesh show skin texture regardless of how tall it stretches
       var uvs = mesh.geometry.getBuffer('aTextureCoord').data;
       for (var row = 0; row <= ROWS; row++) {
         for (var col = 0; col <= COLS; col++) {
           var idx = (row * (COLS + 1) + col) * 2;
-          var u = region.x + (col / COLS) * region.w;
-          var v = region.y + (row / ROWS) * region.h;
+          var u = def.skinUV.x + (col / COLS) * def.skinUV.w;
+          // Map all rows to the same vertical band of skin
+          var v = def.skinUV.y + (row / ROWS) * def.skinUV.h;
           uvs[idx] = u;
           uvs[idx + 1] = v;
         }
@@ -98,12 +107,7 @@
       mesh.geometry.getBuffer('aTextureCoord').update();
 
       app.stage.addChild(mesh);
-      eyeMeshes.push({
-        mesh: mesh,
-        region: region,
-        rows: ROWS,
-        cols: COLS
-      });
+      eyeLids.push({ mesh: mesh, def: def });
     }
 
     fitSprite();
@@ -123,69 +127,38 @@
     sprite.y = 0;
   }
 
-  function positionEyeMesh(em, spriteX, spriteY, scX, scY) {
+  function positionLid(lid, spriteX, spriteY, scX, scY, closeness) {
     var tw = sprite.texture.width;
     var th = sprite.texture.height;
-    var r = em.region;
+    var def = lid.def;
+    var verts = lid.mesh.geometry.getBuffer('aVertexPosition').data;
 
-    // The mesh's vertex positions define where it renders on screen
-    var verts = em.mesh.geometry.getBuffer('aVertexPosition').data;
-    var ox = spriteX - tw * scX * 0.5 + r.x * tw * scX;
-    var oy = spriteY + r.y * th * scY;
-    var pw = r.w * tw * scX;
-    var ph = r.h * th * scY;
+    var ox = spriteX - tw * scX * 0.5;
 
-    for (var row = 0; row <= em.rows; row++) {
-      for (var col = 0; col <= em.cols; col++) {
-        var idx = (row * (em.cols + 1) + col) * 2;
-        verts[idx] = ox + (col / em.cols) * pw;
-        verts[idx + 1] = oy + (row / em.rows) * ph;
-      }
-    }
+    var lidLeft = ox + def.left * tw * scX;
+    var lidRight = ox + def.right * tw * scX;
+    var lidTop = spriteY + def.eyeTop * th * scY;
+    var lidBottom = spriteY + def.eyeBottom * th * scY;
+    var eyeHeight = lidBottom - lidTop;
 
-    em.mesh.geometry.getBuffer('aVertexPosition').update();
-    // Store base positions for blink deformation
-    em.baseVerts = new Float32Array(verts);
-    em.ox = ox;
-    em.oy = oy;
-    em.pw = pw;
-    em.ph = ph;
-  }
-
-  function applyBlink(em, closeness) {
-    if (!em.baseVerts) return;
-    var verts = em.mesh.geometry.getBuffer('aVertexPosition').data;
-    var ph = em.ph;
-    // The crease is the eyelid fold — top portion of the eye region
-    // Below the crease is the actual eye opening
-    var creaseY = em.oy + ph * creaseRatio;
-    var bottomY = em.oy + ph;
     var ease = closeness * closeness * (3 - 2 * closeness);
 
-    for (var row = 0; row <= em.rows; row++) {
-      for (var col = 0; col <= em.cols; col++) {
-        var idx = (row * (em.cols + 1) + col) * 2;
-        var baseY = em.baseVerts[idx + 1];
+    // When closed (ease=1): mesh covers from lidTop to lidBottom (full eye)
+    // When open (ease=0): mesh is zero height at lidTop (invisible)
+    var meshBottom = lidTop + eyeHeight * ease;
 
-        // Top vertices (above crease = eyelid skin) push DOWN to cover the eye
-        if (baseY <= creaseY) {
-          // Eyelid stays in place
-          verts[idx + 1] = baseY;
-        } else {
-          // Vertices below crease: collapse upward toward crease
-          // The further from crease, the more they move
-          var distFromCrease = baseY - creaseY;
-          var eyeHeight = bottomY - creaseY;
-
-          // During blink, all eye-area vertices compress toward the crease line
-          verts[idx + 1] = creaseY + distFromCrease * (1 - ease);
-        }
-
-        verts[idx] = em.baseVerts[idx];
+    for (var row = 0; row <= ROWS; row++) {
+      for (var col = 0; col <= COLS; col++) {
+        var idx = (row * (COLS + 1) + col) * 2;
+        var x = lidLeft + (col / COLS) * (lidRight - lidLeft);
+        var y = lidTop + (row / ROWS) * (meshBottom - lidTop);
+        verts[idx] = x;
+        verts[idx + 1] = y;
       }
     }
 
-    em.mesh.geometry.getBuffer('aVertexPosition').update();
+    lid.mesh.geometry.getBuffer('aVertexPosition').update();
+    lid.mesh.visible = ease > 0.01;
   }
 
   function animate(delta) {
@@ -213,14 +186,7 @@
         sprite.y += (mouseY - s.h / 2) * 0.02;
       }
 
-      // Position eye meshes to match sprite
-      var scX = sprite.scale.x;
-      var scY = sprite.scale.y;
-      for (var i = 0; i < eyeMeshes.length; i++) {
-        positionEyeMesh(eyeMeshes[i], sprite.x, sprite.y, scX, scY);
-      }
-
-      // Blink
+      // Blink timer
       blinkTimer += dt;
       if (blinkPhase === 0 && blinkTimer >= blinkInterval) {
         blinkPhase = 0.001;
@@ -242,8 +208,11 @@
         closeness = Math.max(0, Math.min(1, closeness));
       }
 
-      for (var i = 0; i < eyeMeshes.length; i++) {
-        applyBlink(eyeMeshes[i], closeness);
+      // Position eyelid meshes
+      var scX = sprite.scale.x;
+      var scY = sprite.scale.y;
+      for (var i = 0; i < eyeLids.length; i++) {
+        positionLid(eyeLids[i], sprite.x, sprite.y, scX, scY, closeness);
       }
     }
 
