@@ -280,13 +280,34 @@ function updatedatadone() {
 function shareSetup() {
 	var state = getStateObject();
 	var url = window.location.origin + window.location.pathname + '?' + encodeURIComponent(JSON.stringify(state));
-	if (navigator.clipboard) {
-		navigator.clipboard.writeText(url).then(function() {
-			showShareToast('已複製連結！');
-		});
-	} else {
-		prompt('複製此連結分享你的配置：', url);
+	var copied = false;
+	if (navigator.clipboard && navigator.clipboard.writeText) {
+		try {
+			navigator.clipboard.writeText(url).then(function() {
+				showShareToast('已複製連結！');
+			}).catch(function() {
+				fallbackCopy(url);
+			});
+			return;
+		} catch (e) { }
 	}
+	fallbackCopy(url);
+}
+
+function fallbackCopy(text) {
+	var ta = document.createElement('textarea');
+	ta.value = text;
+	ta.style.position = 'fixed';
+	ta.style.left = '-9999px';
+	document.body.appendChild(ta);
+	ta.select();
+	try {
+		document.execCommand('copy');
+		showShareToast('已複製連結！');
+	} catch (e) {
+		prompt('複製此連結分享你的配置：', text);
+	}
+	document.body.removeChild(ta);
 }
 
 function showShareToast(msg) {
