@@ -1,5 +1,5 @@
 // Character Live2D-style Animation
-// Displacement filter + eyelash-sweep blink
+// Displacement filter + polygon eyelash-sweep blink
 (function () {
   var CHAR_IMG = 'character-clean.png';
   var DISP_IMG = 'character-displacement.png';
@@ -41,31 +41,30 @@
   var mouseY = 0;
   var isHovering = false;
 
-  // Blink state
+  // Blink
   var blinkTimer = 0;
   var blinkInterval = 2;
   var blinkPhase = 0;
   var BLINK_SPEED = 2.5;
 
-  // Skin color sampled from nose bridge
   var SKIN_COLOR = 0xD9C6BF;
 
-  // Eye definitions (normalized to 591x848 image)
-  var eyeDefs = [
-    { // Left eye — tight bounds around actual eye opening only
-      lashY: 232/848,
-      eyeBottom: 252/848,
-      left: 236/591,
-      right: 290/591,
-      lashH: 5/848,
-    },
-    { // Right eye
-      lashY: 230/848,
-      eyeBottom: 250/848,
-      left: 340/591,
-      right: 382/591,
-      lashH: 5/848,
-    }
+  // Eye polygon outlines (normalized 0-1, traced from actual image)
+  var eyePolys = [
+    // Left eye — almond shape
+    [0.3959,0.2877, 0.4027,0.2795, 0.4196,0.2748, 0.4433,0.2724,
+     0.4704,0.2736, 0.4873,0.2771, 0.4958,0.283, 0.4907,0.2925,
+     0.4772,0.2995, 0.4535,0.3031, 0.4264,0.3019, 0.4061,0.2972],
+    // Right eye — almond shape
+    [0.6497,0.2854, 0.643,0.2771, 0.6261,0.2724, 0.6024,0.27,
+     0.5821,0.2712, 0.5702,0.2759, 0.5668,0.283, 0.5702,0.2925,
+     0.5821,0.2983, 0.6024,0.3007, 0.6261,0.2995, 0.643,0.2936]
+  ];
+
+  // Lash Y positions (normalized) — top of each eye
+  var lashDefs = [
+    { topY: 0.2724, botY: 0.3031, lashH: 5/848 }, // left
+    { topY: 0.27,   botY: 0.3007, lashH: 5/848 }  // right
   ];
 
   PIXI.Assets.load([CHAR_IMG, DISP_IMG, LASH_L, LASH_R]).then(function (textures) {
@@ -79,18 +78,16 @@
     app.stage.addChild(dispSprite);
     sprite.filters = [dispFilter];
 
-    // Skin fill layer (drawn behind lash sprites)
     skinGfx = new PIXI.Graphics();
     app.stage.addChild(skinGfx);
 
-    // Lash sprites
     var lashTextures = [textures[LASH_L], textures[LASH_R]];
-    for (var i = 0; i < eyeDefs.length; i++) {
+    for (var i = 0; i < 2; i++) {
       var lashSprite = new PIXI.Sprite(lashTextures[i]);
       lashSprite.anchor.set(0, 0);
       lashSprite.visible = false;
       app.stage.addChild(lashSprite);
-      blinkData.push({ def: eyeDefs[i], lash: lashSprite });
+      blinkData.push({ lash: lashSprite, poly: eyePolys[i], def: lashDefs[i] });
     }
 
     fitSprite();
@@ -101,13 +98,25 @@
     if (!sprite) return;
     var s = getSize();
     app.renderer.resize(s.w, s.h);
-
     var tw = sprite.texture.width;
     var th = sprite.texture.height;
     var scale = s.w / tw;
     sprite.scale.set(scale);
     sprite.x = s.w * 0.55;
     sprite.y = 0;
+  }
+
+  // Convert normalized polygon to screen coords, clipped to a Y threshold
+  function polyToScreen(poly, ox, oy, tw, th, scX, scY, maxY) {
+    var pts = [];
+    for (var i = 0; i < poly.length; i += 2) {
+      var sx = ox + poly[i] * tw * scX;
+      var sy = oy + poly[i + 1] * th * scY;
+      // Clip: any point below maxY gets clamped to maxY
+      if (sy > maxY) sy = maxY;
+      pts.push(sx, sy);
+    }
+    return pts;
   }
 
   function animate(delta) {
@@ -155,58 +164,53 @@
           blinkPhase = 0;
         }
         closeness = Math.max(0, Math.min(1, closeness));
-        // Smoothstep
         closeness = closeness * closeness * (3 - 2 * closeness);
       }
 
-      // Calculate sprite transform values
       var scX = sprite.scale.x;
       var scY = sprite.scale.y;
-      var ox = sprite.x - tw * scX * 0.5; // sprite left edge on screen
-      var oy = sprite.y; // sprite top edge on screen
+      var ox = sprite.x - tw * scX * 0.5;
+      var oy = sprite.y;
 
-      // Draw skin fill and position lash sprites
-      if (skinGfx) {
-        skinGfx.clear();
-      }
+      if (skinGfx) skinGfx.clear();
 
       for (var i = 0; i < blinkData.length; i++) {
         var bd = blinkData[i];
         var def = bd.def;
 
-        // Screen coordinates of this eye
-        var eyeLeft = ox + def.left * tw * scX;
-        var eyeRight = ox + def.right * tw * scX;
-        var eyeTop = oy + def.lashY * th * scY; // where lash normally sits
-        var eyeBottom = oy + def.eyeBottom * th * scY;
+        var eyeTopScreen = oy + def.topY * th * scY;
+        var eyeBotScreen = oy + def.botY * th * scY;
+        var eyeH = eyeBotScreen - eyeTopScreen;
         var lashScreenH = def.lashH * th * scY;
-        var eyeOpenH = eyeBottom - eyeTop;
 
         if (closeness > 0.01) {
           bd.lash.visible = true;
 
-          // Lash position: slides from eyeTop down to eyeBottom
-          var lashY = eyeTop + eyeOpenH * closeness;
+          // The "sweep line" moves from top to bottom of the eye
+          var sweepY = eyeTopScreen + eyeH * closeness;
 
-          // Position and scale lash sprite
-          bd.lash.x = eyeLeft;
-          bd.lash.y = lashY - lashScreenH; // lash sits just above the sweep line
-          bd.lash.width = eyeRight - eyeLeft;
-          bd.lash.height = lashScreenH;
-
-          // Skin fill: oval shape covering from eyeTop to lashY
+          // Draw skin-colored polygon clipped to sweepY
+          // All polygon points below sweepY get clamped up to sweepY
+          // This creates the effect of skin filling the eye shape from top down
           if (skinGfx) {
-            var fillH = lashY - eyeTop - lashScreenH;
-            if (fillH > 1) {
-              var cx = (eyeLeft + eyeRight) / 2;
-              var cy = eyeTop + fillH / 2;
-              var rx = (eyeRight - eyeLeft) / 2;
-              var ry = fillH / 2;
-              skinGfx.beginFill(SKIN_COLOR, 1);
-              skinGfx.drawEllipse(cx, cy, rx, ry);
-              skinGfx.endFill();
-            }
+            var clipped = polyToScreen(bd.poly, ox, oy, tw, th, scX, scY, sweepY);
+            skinGfx.beginFill(SKIN_COLOR, 1);
+            skinGfx.drawPolygon(clipped);
+            skinGfx.endFill();
           }
+
+          // Position lash at the sweep line
+          // Find the left/right extent of the polygon at the sweep line
+          var polyMinX = Infinity, polyMaxX = -Infinity;
+          for (var j = 0; j < bd.poly.length; j += 2) {
+            var px = ox + bd.poly[j] * tw * scX;
+            polyMinX = Math.min(polyMinX, px);
+            polyMaxX = Math.max(polyMaxX, px);
+          }
+          bd.lash.x = polyMinX;
+          bd.lash.y = sweepY - lashScreenH;
+          bd.lash.width = polyMaxX - polyMinX;
+          bd.lash.height = lashScreenH;
         } else {
           bd.lash.visible = false;
         }
