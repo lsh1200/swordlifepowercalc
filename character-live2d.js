@@ -48,16 +48,19 @@
   // skinRegion: the thin strip of skin ABOVE the eye (the eyelid texture source)
   // eyeTop: where the eye opening starts (top of iris)
   // eyeBottom: where the eye opening ends (bottom of eye)
+  // Use nose bridge area as skin texture source — clean skin, no hair/eyebrow
+  var skinSource = { x: 290/591, y: 243/848, w: 35/591, h: 12/848 };
+
   var eyeDefs = [
     { // Left eye
-      skinUV: { x: 220/591, y: 218/848, w: 85/591, h: 12/848 }, // thin skin strip above eye
-      eyeTop: 230/848,   // where eyelid starts (crease)
-      eyeBottom: 262/848, // bottom of eye opening
+      skinUV: skinSource,
+      eyeTop: 230/848,
+      eyeBottom: 262/848,
       left: 220/591,
       right: 305/591,
     },
     { // Right eye
-      skinUV: { x: 328/591, y: 216/848, w: 65/591, h: 12/848 },
+      skinUV: skinSource,
       eyeTop: 228/848,
       eyeBottom: 260/848,
       left: 328/591,
