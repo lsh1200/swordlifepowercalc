@@ -6,6 +6,7 @@
   var EYE_L = 'assets/images/eye-left-closed.png';
   var EYE_R = 'assets/images/eye-right-closed.png';
 
+  if (typeof PIXI === 'undefined') return;
   var canvas = document.getElementById('charCanvas');
   if (!canvas) return;
 
@@ -80,6 +81,8 @@
 
     fitSprite();
     app.ticker.add(animate);
+  }).catch(function() {
+    // Asset load failed — degrade gracefully, calculator still works
   });
 
   function fitSprite() {
@@ -115,6 +118,8 @@
   }
 
   function animate(delta) {
+    // Skip rendering when panel is hidden to save GPU/CPU
+    if (panel.offsetParent === null || panel.clientHeight === 0) return;
     time += delta * 0.016;
     var s = getSize();
     var dt = delta * 0.016;

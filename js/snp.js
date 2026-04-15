@@ -204,44 +204,46 @@ function snapChanged(a, b) {
 }
 
 // ===== URL Data Validation =====
+function isInt(n) { return typeof n === 'number' && Number.isFinite(n) && n === Math.floor(n); }
+
 function validateUrlData(data) {
 	if (!data || typeof data !== 'object') return false;
 	if (!Array.isArray(data.source) || data.source.length !== SLOT_COUNT) return false;
-	if (!Array.isArray(data.frags)) return false;
-	if (typeof data.fragp !== 'number' || data.fragp < 0) return false;
-	if (typeof data.fragb !== 'number' || data.fragb < 0) return false;
+	if (!Array.isArray(data.frags) || data.frags.length > 15) return false;
+	if (!isInt(data.fragp) || data.fragp < 0 || data.fragp > 16383) return false;
+	if (!isInt(data.fragb) || data.fragb < 0 || data.fragb > 32767) return false;
 	if (!Array.isArray(data.target) || data.target.length !== SLOT_COUNT) return false;
 
 	for (var i = 0; i < SLOT_COUNT; i++) {
 		var s = data.source[i];
-		if (!s || typeof s.id !== 'number' || s.id < 0 || s.id >= skills.length) return false;
+		if (!s || !isInt(s.id) || s.id < 0 || s.id >= skills.length) return false;
 		var sk = skills[s.id];
-		if (typeof s.level !== 'number' || s.level < 0 || s.level >= levels[sk.bound].length) return false;
-		if (!Array.isArray(s.src)) return false;
+		if (!isInt(s.level) || s.level < 1 || s.level >= levels[sk.bound].length) return false;
+		if (!Array.isArray(s.src) || s.src.length > 7) return false;
 		for (var j = 0; j < s.src.length; j++) {
 			var frag = s.src[j];
-			if (!frag || typeof frag.id !== 'number' || frag.id < 0 || frag.id >= skills.length) return false;
-			if (typeof frag.amount !== 'number' || frag.amount <= 0) return false;
+			if (!frag || !isInt(frag.id) || frag.id < 0 || frag.id >= skills.length) return false;
+			if (!isInt(frag.amount) || frag.amount <= 0 || frag.amount % FRAGMENT_UNIT !== 0) return false;
 		}
 	}
 
 	for (var i = 0; i < data.frags.length; i++) {
 		var frag = data.frags[i];
-		if (!frag || typeof frag.id !== 'number' || frag.id < 0 || frag.id >= skills.length) return false;
-		if (typeof frag.amount !== 'number' || frag.amount <= 0) return false;
+		if (!frag || !isInt(frag.id) || frag.id < 0 || frag.id >= skills.length) return false;
+		if (!isInt(frag.amount) || frag.amount <= 0 || frag.amount % FRAGMENT_UNIT !== 0) return false;
 	}
 
 	for (var i = 0; i < SLOT_COUNT; i++) {
 		var t = data.target[i];
-		if (!t || typeof t.id !== 'number' || t.id < 0 || t.id >= skills.length) return false;
+		if (!t || !isInt(t.id) || t.id < 0 || t.id >= skills.length) return false;
 		var sk = skills[t.id];
-		if (typeof t.level !== 'number' || t.level < 1 || t.level >= levels[sk.bound].length) return false;
+		if (!isInt(t.level) || t.level < 1 || t.level >= levels[sk.bound].length) return false;
 	}
 
 	if (data.keep !== undefined) {
-		if (!Array.isArray(data.keep)) return false;
+		if (!Array.isArray(data.keep) || data.keep.length > 6) return false;
 		for (var i = 0; i < data.keep.length; i++) {
-			if (typeof data.keep[i] !== 'number' || data.keep[i] < 0 || data.keep[i] >= skills.length) return false;
+			if (!isInt(data.keep[i]) || data.keep[i] < 0 || data.keep[i] >= skills.length) return false;
 		}
 	}
 
@@ -274,7 +276,12 @@ function loadFromLocalStorage() {
 function updatedatadone() {
 	var state = getStateObject();
 	saveToLocalStorage();
-	window.location.href = '?' + encodeURIComponent(JSON.stringify(state));
+	var url = '?' + encodeURIComponent(JSON.stringify(state));
+	history.replaceState(null, '', url);
+	refreshsourcepowerview();
+	refreshtargetpowerview();
+	refreshkeepview();
+	computesuperpower();
 }
 
 // ===== Compact Code Encoding =====
@@ -368,6 +375,7 @@ function loadCode() {
 	var box = document.getElementById('codeBox');
 	var code = box.value.trim();
 	if (!code) { showShareToast('請先貼上配置碼！'); box.focus(); return; }
+	if (code.length > 200) { showShareToast('配置碼太長！'); return; }
 	var data = decodeState(code);
 	if (data && validateUrlData(data)) {
 		source = data.source;
@@ -564,7 +572,7 @@ function buildKeepSelector() {
 
 	var html = '<div class="row">';
 	for (var i = 0; i < sortedSkills.length; i += SKILLS_PER_SHOP) {
-		html += '<div class="col col-md-6 px-2 mx-0 my-1 border align-start" style="min-width:120px; background-color: rgba(255, 255, 255, 0.9);">';
+		html += '<div class="col col-md-6 border align-start" style="background-color: rgba(255, 255, 255, 0.9);">';
 		html += '<h6 class="my-1">' + shops[sortedSkills[i].shop] + '</h6><hr class="divider my-2">';
 		for (var j = i; j < Math.min(i + SKILLS_PER_SHOP, sortedSkills.length); j++) {
 			var sk = sortedSkills[j];
@@ -827,7 +835,7 @@ function buildShopSelector(fragmentMap, disabledSkillId, minusFn, plusFn, spanPr
 
 	var html = '<div class="row">';
 	for (var i = 0; i < sortedSkills.length; i += SKILLS_PER_SHOP) {
-		html += '<div class="col col-md-6 px-2 mx-0 my-1 border align-start" style="min-width:120px; background-color: rgba(255, 255, 255, 0.9);">';
+		html += '<div class="col col-md-6 border align-start" style="background-color: rgba(255, 255, 255, 0.9);">';
 		html += '<h6 class="my-1">' + shops[sortedSkills[i].shop] + ' </h6><hr class="divider my-2">';
 		for (var j = i; j < Math.min(i + SKILLS_PER_SHOP, sortedSkills.length); j++) {
 			var skillId = sortedSkills[j].id;
@@ -1183,8 +1191,10 @@ $('#sfsub').on('click', function() {
 			frags.push({id: i, amount: cnt});
 		}
 	}
-	fragb = Number($('#fragbcnt')[0].value);
-	fragp = Number($('#fragpcnt')[0].value);
+	fragb = Math.max(0, Math.floor(Number($('#fragbcnt')[0].value) || 0));
+	fragp = Math.max(0, Math.floor(Number($('#fragpcnt')[0].value) || 0));
+	if (fragp > 16383) fragp = 16383;
+	if (fragb > 32767) fragb = 32767;
 	refreshsourcepowerview();
 	computesuperpower();
 	savedFlag = true;

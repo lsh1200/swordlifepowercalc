@@ -748,15 +748,25 @@ select option.text-tribe-green { color: var(--game-tribe-green); }
   color: var(--text-primary);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
-  margin: 4px !important;
-  border-radius: 2px;
 }
 
-/* Shop grid layout — gaps between categories */
+/* Shop grid: 2 boxes per row with gaps */
 #ssshop .row,
 #sfshop .row,
 #kshop .row {
+  display: flex;
+  flex-wrap: wrap;
   gap: 8px;
+}
+
+#ssshop .row > [class*="col"],
+#sfshop .row > [class*="col"],
+#kshop .row > [class*="col"] {
+  flex: 0 0 calc(50% - 4px);
+  max-width: calc(50% - 4px);
+  min-width: 0;
+  margin: 0 !important;
+  padding: 8px !important;
 }
 
 #ssshop h6,
