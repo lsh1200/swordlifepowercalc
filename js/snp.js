@@ -552,11 +552,24 @@ function computesuperpower() {
 			}
 		});
 	});
+	function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+	var cp = conversionParts.join("，");
+	var cc = conversionCount;
 	var conversionHtml = '';
-	if (conversionCount > 0) {
-		conversionHtml = "我我我……我算出來了！你、你把" + conversionParts.join("，") + "……一共" + conversionCount + "次……別、別問我怎麼算的，我只是……剛好路過而已！<br />";
+	if (cc > 0) {
+		conversionHtml = pick([
+			"我我我……我算出來了！你、你把" + cp + "……一共" + cc + "次……別、別問我為什麼幫你算，我只是……剛好路過而已！",
+			"那、那個……你要轉換" + cc + "次……就是" + cp + "……我我我才沒有偷偷幫你算很久……（臉紅）",
+			"嗯……（翻殘卷）你把" + cp + "就好了，總共" + cc + "次……我我我只是順手算的，別想太多！",
+			"我、我幫你看了一下……" + cp + "，一共" + cc + "次轉換……你、你不準問我為什麼這麼熟練……（小聲）",
+			"好……好像踩到了一塊石頭……（低頭看殘卷）啊！你把" + cp + "就行了，" + cc + "次……才、才不是特意幫你研究的！",
+		]) + "<br />";
 	} else {
-		conversionHtml = "咦？不、不用轉換呢……你的殘卷剛剛好……（鬆了口氣）<br />";
+		conversionHtml = pick([
+			"咦？不、不用轉換呢……你的殘卷剛剛好……（鬆了口氣）",
+			"欸……居然不用轉換？你、你運氣也太好了吧……（小聲嘟囔）",
+			"我我我看了好幾遍……真的不用轉換呢……你是不是偷偷算過了？",
+		]) + "<br />";
 	}
 
 	// Phase 4: Allocate remaining fragments for generic needs, then purple/blue scrolls
@@ -599,32 +612,54 @@ function computesuperpower() {
 	var deficitHtml = '';
 	var hasDeficit = deficitItems.length > 0 || missingOther > 0 || missingPurple > 0 || missingBlue > 0;
 	if (hasDeficit) {
-		var missingParts = [];
-		if (deficitItems.length > 0) missingParts.push(deficitItems.join("跟"));
-		if (missingOther > 0) missingParts.push("仙品殘卷" + missingOther + "個");
-		if (missingPurple > 0) missingParts.push("極品殘卷" + missingPurple + "個");
-		if (missingBlue > 0) missingParts.push("上品殘卷" + missingBlue + "個");
-		deficitHtml += "糟、糟糕……還差" + missingParts.join("、") + "……（牙關打顫）不、不過別擔心嘛……慢慢湊就好了，我我我……會在這裡等你的……（小聲）<br />";
+		var mp = [];
+		if (deficitItems.length > 0) mp.push(deficitItems.join("跟"));
+		if (missingOther > 0) mp.push("仙品殘卷" + missingOther + "個");
+		if (missingPurple > 0) mp.push("極品殘卷" + missingPurple + "個");
+		if (missingBlue > 0) mp.push("上品殘卷" + missingBlue + "個");
+		var ms = mp.join("、");
+		deficitHtml += pick([
+			"糟、糟糕……還差" + ms + "……（牙關打顫）不、不過別擔心嘛……慢慢湊就好了，我我我……會在這裡等你的……（小聲）",
+			"嗚……差了" + ms + "……（瑟瑟發抖）但、但是沒關係的！你已經很厲害了……剩下的一定能湊齊的……",
+			"我我我算了好幾遍……確實還差" + ms + "……（眼眶微紅）你、你別急，慢慢來嘛……我又不會跑掉……",
+			"還差" + ms + "呢……（攥緊衣角）沒、沒事的……這點缺口很快就能補上的，你、你一定可以的！",
+			"唔……" + ms + "還不夠……（低頭）不過……不過你已經準備得很好了！真的！我我我沒有在安慰你……（紅著臉）",
+		]) + "<br />";
 	} else {
-		deficitHtml += "全、全部夠了！……我我我沒有很開心啦！只是……剛好鬆了口氣而已……<br />";
+		deficitHtml += pick([
+			"全、全部夠了！……我我我沒有很開心啦！只是……剛好鬆了口氣而已……",
+			"哇……居然全部夠用了……（眼睛亮亮的）我、我才沒有替你高興呢！",
+			"剛剛好全部夠了！你、你太厲害了吧……（小聲）我我我只是在陳述事實而已……",
+			"全……全部夠了呢……（偷偷鬆口氣）看吧，我就說你可以的……才、才不是因為擔心你才一直在算……",
+		]) + "<br />";
 	}
 
 	var remainderHtml = '';
 	var hasRemainder = totalGold > 0 || totalPurple > 0 || totalBlue > 0;
 	if (hasRemainder) {
-		var leftParts = [];
+		var lp = [];
 		if (totalGold > 0) {
-			var detailParts = [];
+			var dp = [];
 			fragmentMap.forEach(function(amount, fragId) {
-				if (amount > 0) detailParts.push(skills[fragId].name + amount + "個");
+				if (amount > 0) dp.push(skills[fragId].name + amount + "個");
 			});
-			leftParts.push("仙品殘卷" + totalGold + "個" + (detailParts.length > 0 ? "（" + detailParts.join("、") + "）" : ""));
+			lp.push("仙品殘卷" + totalGold + "個" + (dp.length > 0 ? "（" + dp.join("、") + "）" : ""));
 		}
-		if (totalPurple > 0) leftParts.push("極品殘卷" + totalPurple + "個");
-		if (totalBlue > 0) leftParts.push("上品殘卷" + totalBlue + "個");
-		remainderHtml += "對了……算完還剩" + leftParts.join("、") + "……你、你收好啊！下……下次要算的話……我、我也不是不可以幫你……（別過頭）<br />";
+		if (totalPurple > 0) lp.push("極品殘卷" + totalPurple + "個");
+		if (totalBlue > 0) lp.push("上品殘卷" + totalBlue + "個");
+		var ls = lp.join("、");
+		remainderHtml += pick([
+			"對了……算完還剩" + ls + "……你、你收好啊！下……下次要算的話……我、我也不是不可以幫你……（別過頭）",
+			"嗯……還多出" + ls + "……先存著吧！以、以後說不定用得上……（偷瞄你）",
+			"剩下" + ls + "……你、你自己保管好啊！我我我才不會幫你記著呢……（其實已經記住了）",
+			"啊……還有" + ls + "剩著……（歪頭）留著下次用吧……反、反正我隨時都在……（小聲到幾乎聽不見）",
+		]) + "<br />";
 	} else {
-		remainderHtml += "剛剛好用完了……好像踩到了什麼好運呢……（小聲）<br />";
+		remainderHtml += pick([
+			"剛剛好用完了……好像踩到了什麼好運呢……（小聲）",
+			"一個都不剩……完、完美！（握拳）我我我才沒有在心裡歡呼……",
+			"全部用完了呢……這運氣也太好了吧……（眼睛亮亮的）",
+		]) + "<br />";
 	}
 
 	$('#tsum')[0].innerHTML = conversionHtml + "<br />" + deficitHtml + "<br />" + remainderHtml;
