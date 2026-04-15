@@ -249,19 +249,72 @@ function validateUrlData(data) {
 }
 
 // ===== State Persistence =====
-function updatedatadone() {
+var STORAGE_KEY = 'snp_save';
+
+function getStateObject() {
 	var state = {source: source, frags: frags, fragp: fragp, fragb: fragb, target: target};
 	if (keep.length > 0) state.keep = keep;
+	return state;
+}
+
+function saveToLocalStorage() {
+	try {
+		localStorage.setItem(STORAGE_KEY, JSON.stringify(getStateObject()));
+	} catch (e) { /* quota exceeded or private browsing */ }
+}
+
+function loadFromLocalStorage() {
+	try {
+		var raw = localStorage.getItem(STORAGE_KEY);
+		if (raw) return JSON.parse(raw);
+	} catch (e) { /* corrupted data */ }
+	return null;
+}
+
+function updatedatadone() {
+	var state = getStateObject();
+	saveToLocalStorage();
 	window.location.href = '?' + encodeURIComponent(JSON.stringify(state));
+}
+
+function shareSetup() {
+	var state = getStateObject();
+	var url = window.location.origin + window.location.pathname + '?' + encodeURIComponent(JSON.stringify(state));
+	if (navigator.clipboard) {
+		navigator.clipboard.writeText(url).then(function() {
+			showShareToast('已複製連結！');
+		});
+	} else {
+		prompt('複製此連結分享你的配置：', url);
+	}
+}
+
+function showShareToast(msg) {
+	var el = document.getElementById('shareToast');
+	if (!el) return;
+	el.textContent = msg;
+	el.style.display = 'block';
+	el.style.opacity = '1';
+	setTimeout(function() {
+		el.style.opacity = '0';
+		setTimeout(function() { el.style.display = 'none'; }, 300);
+	}, 2000);
 }
 
 // ===== Data Loading =====
 function refreshdata() {
 	var data = null;
+
+	// Priority 1: URL params (for shared links)
 	try {
-		data = JSON.parse(decodeURIComponent(window.location.search.substring(1)));
-	} catch (e) {
-		// Invalid or empty URL params — fall through to defaults
+		if (window.location.search.length > 1) {
+			data = JSON.parse(decodeURIComponent(window.location.search.substring(1)));
+		}
+	} catch (e) { }
+
+	// Priority 2: localStorage (auto-saved)
+	if (data === null) {
+		data = loadFromLocalStorage();
 	}
 
 	if (data !== null && validateUrlData(data)) {
@@ -1011,6 +1064,7 @@ $('#ksub').on('click', function() {
 // ===== Initialize =====
 function main() {
 	refreshdata();
+	saveToLocalStorage();
 	refreshsourcepowerview();
 	refreshtargetpowerview();
 	refreshkeepview();
