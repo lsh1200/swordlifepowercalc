@@ -53,9 +53,12 @@
           <h6>4.輸入防呆有待完善，可能有bug請慎入</h6>
           <h6>5.配置自動保存，關閉瀏覽器也不會丟失</h6>
           <h6 style="margin-top:0.5rem">
-            <button class="btn btn-outline-share btn-sm" onclick="shareSetup()">生成配置碼</button>
-            <button class="btn btn-outline-share btn-sm" onclick="importSetup()" style="margin-left:4px">匯入配置碼</button>
-            <span style="color:var(--text-tertiary);font-size:11px;margin-left:4px">分享配置碼給朋友即可同步</span>
+            <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+              <input id="codeBox" type="text" class="form-control form-control-sm" placeholder="貼上配置碼或點擊生成" style="flex:1;min-width:200px;max-width:400px;font-family:var(--font-mono);font-size:11px" readonly>
+              <button class="btn btn-outline-share btn-sm" onclick="generateCode()">生成</button>
+              <button class="btn btn-outline-share btn-sm" onclick="copyCode()">複製</button>
+              <button class="btn btn-outline-share btn-sm" onclick="loadCode()">匯入</button>
+            </div>
           </h6>
         </div>
         <div id="shareToast" class="share-toast" style="display:none"></div>
@@ -273,7 +276,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/pixi.js@7.3.3/dist/pixi.min.js"></script>
-  <script src="js/snp.js?v=60"></script>
+  <script src="js/snp.js?v=61"></script>
   <script src="js/character-live2d.js?v=44"></script>
 </body>
 </html>

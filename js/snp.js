@@ -381,29 +381,55 @@ function decodeState(code) {
 	}
 }
 
-function shareSetup() {
+function generateCode() {
 	var code = encodeState();
-	var ta = document.createElement('textarea');
-	ta.value = code;
-	ta.setAttribute('readonly', '');
-	ta.style.position = 'fixed';
-	ta.style.left = '-9999px';
-	ta.style.opacity = '0';
-	document.body.appendChild(ta);
-	ta.focus();
-	ta.select();
+	var box = document.getElementById('codeBox');
+	box.value = code;
+	box.removeAttribute('readonly');
+	box.readOnly = true;
+	showShareToast('配置碼已生成！');
+}
+
+function copyCode() {
+	var box = document.getElementById('codeBox');
+	if (!box.value) { generateCode(); }
+	box.select();
+	box.setSelectionRange(0, 99999);
 	var ok = false;
 	try { ok = document.execCommand('copy'); } catch (e) { }
-	document.body.removeChild(ta);
 	if (ok) {
-		showShareToast('已複製配置碼！');
+		showShareToast('已複製！');
 	} else {
-		window.prompt('複製此配置碼：', code);
+		showShareToast('請手動複製');
 	}
 }
 
-function importSetup() {
-	var code = window.prompt('貼上配置碼：');
+function loadCode() {
+	var box = document.getElementById('codeBox');
+	box.removeAttribute('readonly');
+	box.readOnly = false;
+	box.value = '';
+	box.placeholder = '在此貼上配置碼，再點擊匯入';
+	box.focus();
+
+	// If box already has a pasted code, load it
+	setTimeout(function() {
+		if (box.value) applyCode(box.value);
+	}, 100);
+
+	// Listen for paste or manual entry then click
+	box.onkeydown = function(e) {
+		if (e.key === 'Enter') {
+			applyCode(box.value);
+			box.onkeydown = null;
+		}
+	};
+	box.onpaste = function() {
+		setTimeout(function() { applyCode(box.value); box.onpaste = null; }, 50);
+	};
+}
+
+function applyCode(code) {
 	if (!code) return;
 	var data = decodeState(code.trim());
 	if (data && validateUrlData(data)) {
@@ -418,6 +444,9 @@ function importSetup() {
 		refreshtargetpowerview();
 		refreshkeepview();
 		computesuperpower();
+		var box = document.getElementById('codeBox');
+		box.readOnly = true;
+		box.placeholder = '貼上配置碼或點擊生成';
 		showShareToast('配置已匯入！');
 	} else {
 		showShareToast('配置碼無效！');
@@ -1037,8 +1066,9 @@ function discardTarget() {
 
 window.discardSource = discardSource;
 window.discardTarget = discardTarget;
-window.shareSetup = shareSetup;
-window.importSetup = importSetup;
+window.generateCode = generateCode;
+window.copyCode = copyCode;
+window.loadCode = loadCode;
 window.encodeState = encodeState;
 window.decodeState = decodeState;
 
