@@ -277,11 +277,122 @@ function updatedatadone() {
 	window.location.href = '?' + encodeURIComponent(JSON.stringify(state));
 }
 
+// ===== Compact Code Encoding =====
+// Packs state into a short alphanumeric code
+// Format: source slots (id,level,src count,src pairs) + frags + fragp + fragb + target + keep
+function encodeState() {
+	var nums = [];
+	// source: 6 slots
+	for (var i = 0; i < SLOT_COUNT; i++) {
+		var s = source[i];
+		nums.push(s.id, s.level, s.src.length);
+		for (var j = 0; j < s.src.length; j++) {
+			nums.push(s.src[j].id, s.src[j].amount / FRAGMENT_UNIT); // store as units not raw
+		}
+	}
+	// frags
+	nums.push(frags.length);
+	for (var i = 0; i < frags.length; i++) {
+		nums.push(frags[i].id, frags[i].amount / FRAGMENT_UNIT);
+	}
+	// fragp, fragb (as raw)
+	nums.push(fragp, fragb);
+	// target: 6 slots
+	for (var i = 0; i < SLOT_COUNT; i++) {
+		nums.push(target[i].id, target[i].level);
+	}
+	// keep
+	nums.push(keep.length);
+	for (var i = 0; i < keep.length; i++) nums.push(keep[i]);
+
+	// Pack numbers into bytes using variable-length encoding
+	var bytes = [];
+	for (var i = 0; i < nums.length; i++) {
+		var n = nums[i];
+		if (n < 128) {
+			bytes.push(n);
+		} else if (n < 16384) {
+			bytes.push(128 | (n >> 7), n & 127);
+		} else {
+			bytes.push(128 | (n >> 14), 128 | ((n >> 7) & 127), n & 127);
+		}
+	}
+
+	// Base64url encode
+	var bin = '';
+	for (var i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+	var code = btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+
+	// Format with dashes for readability: WJCS-xxxx-xxxx-...
+	var parts = ['WJCS'];
+	for (var i = 0; i < code.length; i += 4) {
+		parts.push(code.substring(i, i + 4));
+	}
+	return parts.join('-');
+}
+
+function decodeState(code) {
+	try {
+		// Strip prefix and dashes
+		var parts = code.split('-');
+		if (parts[0] !== 'WJCS') return null;
+		var b64 = parts.slice(1).join('').replace(/-/g, '+').replace(/_/g, '/');
+		while (b64.length % 4) b64 += '=';
+		var bin = atob(b64);
+		var bytes = [];
+		for (var i = 0; i < bin.length; i++) bytes.push(bin.charCodeAt(i));
+
+		// Decode variable-length numbers
+		var nums = [];
+		var idx = 0;
+		while (idx < bytes.length) {
+			var n = 0;
+			while (idx < bytes.length && bytes[idx] >= 128) {
+				n = (n << 7) | (bytes[idx] & 127);
+				idx++;
+			}
+			if (idx < bytes.length) {
+				n = (n << 7) | bytes[idx];
+				idx++;
+			}
+			nums.push(n);
+		}
+
+		// Unpack
+		var p = 0;
+		var src = [];
+		for (var i = 0; i < SLOT_COUNT; i++) {
+			var id = nums[p++], lv = nums[p++], sc = nums[p++];
+			var srcs = [];
+			for (var j = 0; j < sc; j++) {
+				srcs.push({id: nums[p++], amount: nums[p++] * FRAGMENT_UNIT});
+			}
+			src.push({id: id, level: lv, src: srcs});
+		}
+		var fl = nums[p++];
+		var fr = [];
+		for (var i = 0; i < fl; i++) {
+			fr.push({id: nums[p++], amount: nums[p++] * FRAGMENT_UNIT});
+		}
+		var fp = nums[p++], fb = nums[p++];
+		var tgt = [];
+		for (var i = 0; i < SLOT_COUNT; i++) {
+			tgt.push({id: nums[p++], level: nums[p++]});
+		}
+		var kl = nums[p++];
+		var kp = [];
+		for (var i = 0; i < kl; i++) kp.push(nums[p++]);
+
+		return {source: src, frags: fr, fragp: fp, fragb: fb, target: tgt, keep: kp};
+	} catch (e) {
+		return null;
+	}
+}
+
 function shareSetup() {
-	var state = getStateObject();
-	var url = window.location.origin + window.location.pathname + '?' + encodeURIComponent(JSON.stringify(state));
+	var code = encodeState();
 	var ta = document.createElement('textarea');
-	ta.value = url;
+	ta.value = code;
 	ta.setAttribute('readonly', '');
 	ta.style.position = 'fixed';
 	ta.style.left = '-9999px';
@@ -293,9 +404,31 @@ function shareSetup() {
 	try { ok = document.execCommand('copy'); } catch (e) { }
 	document.body.removeChild(ta);
 	if (ok) {
-		showShareToast('已複製連結！');
+		showShareToast('已複製配置碼！');
 	} else {
-		window.prompt('複製此連結分享你的配置：', url);
+		window.prompt('複製此配置碼：', code);
+	}
+}
+
+function importSetup() {
+	var code = window.prompt('貼上配置碼：');
+	if (!code) return;
+	var data = decodeState(code.trim());
+	if (data && validateUrlData(data)) {
+		source = data.source;
+		frags = data.frags;
+		fragp = data.fragp;
+		fragb = data.fragb;
+		target = data.target;
+		keep = Array.isArray(data.keep) ? data.keep : [];
+		saveToLocalStorage();
+		refreshsourcepowerview();
+		refreshtargetpowerview();
+		refreshkeepview();
+		computesuperpower();
+		showShareToast('配置已匯入！');
+	} else {
+		showShareToast('配置碼無效！');
 	}
 }
 
@@ -912,6 +1045,10 @@ function discardTarget() {
 
 window.discardSource = discardSource;
 window.discardTarget = discardTarget;
+window.shareSetup = shareSetup;
+window.importSetup = importSetup;
+window.encodeState = encodeState;
+window.decodeState = decodeState;
 
 // ===== jQuery Event Bindings =====
 

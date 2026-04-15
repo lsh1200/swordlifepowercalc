@@ -52,7 +52,11 @@
           <h6>3.部分資料參考大陸來源，試算結果僅供參考</h6>
           <h6>4.輸入防呆有待完善，可能有bug請慎入</h6>
           <h6>5.配置自動保存，關閉瀏覽器也不會丟失</h6>
-          <h6 style="margin-top:0.5rem"><button class="btn btn-outline-share btn-sm" onclick="shareSetup()">分享配置</button> <span style="color:var(--text-tertiary);font-size:11px">點擊複製連結給朋友</span></h6>
+          <h6 style="margin-top:0.5rem">
+            <button class="btn btn-outline-share btn-sm" onclick="shareSetup()">生成配置碼</button>
+            <button class="btn btn-outline-share btn-sm" onclick="importSetup()" style="margin-left:4px">匯入配置碼</button>
+            <span style="color:var(--text-tertiary);font-size:11px;margin-left:4px">分享配置碼給朋友即可同步</span>
+          </h6>
         </div>
         <div id="shareToast" class="share-toast" style="display:none"></div>
       </div>
@@ -269,7 +273,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/pixi.js@7.3.3/dist/pixi.min.js"></script>
-  <script src="js/snp.js?v=58"></script>
+  <script src="js/snp.js?v=59"></script>
   <script src="js/character-live2d.js?v=44"></script>
 </body>
 </html>
