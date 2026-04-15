@@ -1,0 +1,1175 @@
+/* ================================================================
+   Sword Life Power Calculator — Custom Theme
+   Design System: Dark Glassmorphism (Gigantic Media inspired)
+   Stack: Bootstrap 5.3.8 override layer
+   ================================================================ */
+
+/* ── Google Fonts ─────────────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;600;700&family=Noto+Serif+TC:wght@400;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+/* ── Xianxia Title Font ───────────────────────────────────────── */
+@font-face {
+  font-family: 'ChisugaShotai';
+  src: url('../assets/fonts/chisuga-shotai.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ── Design Tokens ────────────────────────────────────────────── */
+:root {
+  /* Surfaces */
+  --surface-primary: #1a1a1e;
+  --surface-secondary: #2a2a2e;
+  --surface-tertiary: #3a3a3e;
+  --surface-glass: rgba(255, 255, 255, 0.06);
+  --surface-glass-hover: rgba(255, 255, 255, 0.10);
+  --surface-glass-border: rgba(240, 231, 233, 0.12);
+  --surface-glass-strong: rgba(255, 255, 255, 0.09);
+
+  /* Text */
+  --text-primary: #f0e7e9;
+  --text-secondary: #ae9ea1;
+  --text-tertiary: #6f6769;
+  --text-on-accent: #f0e7e9;
+
+  /* Accent */
+  --accent-primary: #e85b54;
+  --accent-primary-hover: #d44d47;
+  --accent-glow: rgba(232, 91, 84, 0.4);
+
+  /* Lines */
+  --line-primary: #5a5052;
+  --line-secondary: rgba(240, 231, 233, 0.08);
+  --line-accent: rgba(232, 91, 84, 0.3);
+
+  /* Game Types */
+  --game-fire: #e85b54;
+  --game-sword: #fbbf24;
+  --game-thunder: #60a5fa;
+  --game-tribe: #c4b5fd;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
+  --shadow-glow: 0 0 20px var(--accent-glow);
+
+  /* Transitions */
+  --transition-fast: 150ms ease-out;
+  --transition-normal: 250ms ease-out;
+  --transition-slow: 400ms ease-out;
+
+  /* Typography */
+  --font-xianxia: 'ChisugaShotai', 'Noto Serif TC', serif;
+  --font-primary: 'ChisugaShotai', 'Noto Serif TC', 'Noto Sans TC', -apple-system, BlinkMacSystemFont, serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+
+  /* Spacing */
+  --space-1: 0.25rem;
+  --space-2: 0.25rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-8: 3rem;
+}
+
+/* ── Base Reset ───────────────────────────────────────────────── */
+html {
+  overflow-y: scroll;
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-primary);
+  background-color: var(--surface-primary);
+  color: var(--text-primary);
+  font-size: 13px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  min-height: 100vh;
+  padding-right: 0 !important;
+}
+
+/* Background image overlay */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: url('../assets/images/imgc.jpg');
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  opacity: 0.08;
+  z-index: -1;
+  pointer-events: none;
+}
+
+/* ── Typography ───────────────────────────────────────────────── */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-primary);
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.page-title {
+  font-family: var(--font-xianxia);
+  font-size: 2.5rem;
+  font-weight: normal;
+  letter-spacing: 0.05em;
+  line-height: 1.2;
+  color: var(--text-primary);
+}
+
+.page-subtitle {
+  font-family: var(--font-xianxia);
+  font-size: 1.125rem;
+  font-weight: normal;
+  color: var(--text-secondary);
+  letter-spacing: 0.1em;
+}
+
+/* ── Decorative Elements ──────────────────────────────────────── */
+
+/* Horizontal divider with glow dot */
+.divider-glow {
+  position: relative;
+  width: 100%;
+  height: 1px;
+  background: var(--line-primary);
+  margin: var(--space-5) 0;
+}
+
+.divider-glow::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 0.5rem;
+  height: 0.5rem;
+  background: var(--accent-primary);
+  border-radius: 50%;
+  filter: blur(2px);
+}
+
+/* Corner accent marks */
+.corner-accent {
+  position: relative;
+}
+
+.corner-accent::before,
+.corner-accent::after {
+  content: '';
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border-color: var(--accent-primary);
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+.corner-accent::before {
+  top: -1px;
+  left: -1px;
+  border-top: 1px solid;
+  border-left: 1px solid;
+}
+
+.corner-accent::after {
+  bottom: -1px;
+  right: -1px;
+  border-bottom: 1px solid;
+  border-right: 1px solid;
+}
+
+/* Glow dot standalone */
+.glow-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  background: var(--accent-primary);
+  border-radius: 50%;
+  filter: blur(1.5px);
+  vertical-align: middle;
+}
+
+.glow-dot-lg {
+  width: 10px;
+  height: 10px;
+  filter: blur(3px);
+}
+
+/* ── Glass Card ───────────────────────────────────────────────── */
+.glass-card {
+  background: var(--surface-glass);
+  border: 1px solid var(--surface-glass-border);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: var(--shadow-md);
+  position: relative;
+}
+
+.glass-card-strong {
+  background: var(--surface-glass-strong);
+  border: 1px solid var(--surface-glass-border);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+/* ── Header Section ───────────────────────────────────────────── */
+.site-header {
+  padding: var(--space-6) 0 var(--space-4);
+  text-align: center;
+}
+
+.site-header .version-badge {
+  display: inline-block;
+  background: var(--accent-primary);
+  color: var(--text-on-accent);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 2px 10px;
+  margin-left: var(--space-2);
+  vertical-align: middle;
+}
+
+/* ── Tips / Notes Section ─────────────────────────────────────── */
+#tips {
+  background: var(--surface-glass) !important;
+  border: 1px solid var(--surface-glass-border);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+#tips h5 {
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+#tips h5:first-child {
+  color: var(--text-primary);
+  font-size: 1.25rem;
+  letter-spacing: -0.02em;
+}
+
+#tips h5:nth-child(2) {
+  color: var(--accent-primary);
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+}
+
+#tips h6 {
+  color: var(--text-secondary);
+  font-weight: 400;
+  font-size: 12px;
+  margin-bottom: 0.25rem;
+}
+
+/* ── Tables ───────────────────────────────────────────────────── */
+#stbl,
+#ttbl {
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+  font-family: var(--font-mono), var(--font-primary);
+  font-size: 12px;
+}
+
+#stbl td, #stbl th,
+#ttbl td, #ttbl th {
+  background-color: transparent !important;
+  border-color: var(--line-secondary);
+  padding: 3px 6px;
+  vertical-align: middle;
+}
+
+#stbl thead, #ttbl thead {
+  background: var(--surface-tertiary);
+}
+
+#stbl thead tr, #ttbl thead tr {
+  border-bottom: 1px solid var(--line-primary);
+}
+
+#stbl thead th, #stbl thead td,
+#ttbl thead th, #ttbl thead td {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-secondary);
+  border-color: var(--line-secondary);
+  padding: 3px 6px;
+}
+
+#stbl tbody tr, #ttbl tbody tr {
+  transition: background-color var(--transition-fast);
+}
+
+#stbl tbody tr:hover, #ttbl tbody tr:hover {
+  background-color: var(--surface-glass-hover);
+}
+
+#stbl tfoot, #ttbl tfoot {
+  border-top: 2px solid var(--accent-primary);
+}
+
+#stbl tfoot th, #stbl tfoot td,
+#ttbl tfoot th, #ttbl tfoot td {
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+/* Table group divider override */
+.table-group-divider {
+  border-top-color: var(--line-primary) !important;
+}
+
+/* Table card wrapper */
+.table-card {
+  background: var(--surface-glass);
+  border: 1px solid var(--surface-glass-border);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  padding: var(--space-2) var(--space-3);
+  position: relative;
+}
+
+
+/* Caption / section title */
+#stbl caption, #ttbl caption {
+  caption-side: top;
+  padding-bottom: var(--space-3);
+}
+
+#stbl caption h4, #ttbl caption h4 {
+  margin: 0;
+}
+
+.badge.text-bg-secondary {
+  background-color: var(--surface-tertiary) !important;
+  color: var(--text-primary);
+  font-family: var(--font-xianxia);
+  font-size: 15px;
+  font-weight: normal;
+  letter-spacing: 0.06em;
+  padding: 6px 14px;
+  border: 1px solid var(--line-primary);
+  border-radius: 0;
+}
+
+/* Table hover override */
+.table-hover > tbody > tr:hover > * {
+  --bs-table-bg-state: transparent;
+  background-color: var(--surface-glass-hover);
+  color: var(--text-primary);
+}
+
+/* ── Summary Section (filled by computesuperpower innerHTML) ──── */
+#tsum {
+  background: var(--surface-glass) !important;
+  border: 1px solid var(--surface-glass-border);
+  color: var(--text-primary);
+  font-size: 12px;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  line-height: 1.8;
+  font-family: var(--font-primary);
+}
+
+#tsum:empty {
+  display: none;
+}
+
+/* ── Report Row: Summary + Character ─────────────────────────── */
+.report-row {
+  display: flex;
+  gap: var(--space-3);
+  align-items: stretch;
+}
+
+.report-row #tsum {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Character Panel — Live2D-style animated canvas */
+.character-panel {
+  flex: 0 0 240px;
+  width: 240px;
+  position: relative;
+  overflow: hidden;
+  min-height: 400px;
+  margin-top: -44px;
+  z-index: 2;
+  -webkit-mask-image: radial-gradient(
+    ellipse 90% 90% at 70% 45%,
+    black 50%,
+    transparent 80%
+  );
+  mask-image: radial-gradient(
+    ellipse 90% 90% at 70% 45%,
+    black 50%,
+    transparent 80%
+  );
+}
+
+.character-panel canvas {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.character-glow {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 50%;
+  background: linear-gradient(
+    to top,
+    var(--surface-primary) 0%,
+    transparent 100%
+  );
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Hide character when report is empty */
+.report-row:not(:has(#tsum:not(:empty))) .character-panel {
+  display: none;
+}
+
+@media (max-width: 767px) {
+  .report-row {
+    flex-direction: column;
+  }
+
+  .character-panel {
+    flex: 0 0 auto;
+    height: 200px;
+    min-height: 200px;
+  }
+}
+
+/* ── Buttons ──────────────────────────────────────────────────── */
+.btn-primary {
+  background-color: var(--accent-primary);
+  border-color: var(--accent-primary);
+  color: var(--text-on-accent);
+  border-radius: 0;
+  font-weight: 500;
+  font-size: 13px;
+  letter-spacing: 0.01em;
+  padding: 0.5rem 1.5rem;
+  transition: all var(--transition-fast);
+  min-height: 44px;
+}
+
+.btn-primary:hover,
+.btn-primary:focus {
+  background-color: var(--accent-primary-hover);
+  border-color: var(--accent-primary-hover);
+  box-shadow: var(--shadow-glow);
+}
+
+.btn-primary:active {
+  background-color: #c04440;
+  border-color: #c04440;
+  transform: scale(0.98);
+}
+
+.btn-outline-danger {
+  color: var(--accent-primary);
+  border-color: var(--accent-primary);
+  border-radius: 0;
+  font-size: 10px;
+}
+
+.btn-outline-danger:hover {
+  background-color: var(--accent-primary);
+  color: var(--text-on-accent);
+}
+
+/* ── Offcanvas / Side Panels ──────────────────────────────────── */
+.offcanvas {
+  background-color: var(--surface-secondary) !important;
+  color: var(--text-primary);
+  border: none !important;
+}
+
+#ssel, #fsel, #ksel {
+  background-image: url('../assets/images/imgl.jpg') !important;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  box-shadow: 4px 0 0 0 #1a1a1e, -4px 0 0 0 #1a1a1e;
+}
+
+#ssel::before, #fsel::before, #ksel::before {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  background: rgba(26, 26, 30, 0.96);
+  z-index: 0;
+  pointer-events: none;
+}
+
+#ssel > *, #fsel > *, #ksel > * {
+  position: relative;
+  z-index: 1;
+}
+
+#tsel {
+  background-image: url('../assets/images/imgr.jpg') !important;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  box-shadow: -4px 0 0 0 #1a1a1e, 4px 0 0 0 #1a1a1e;
+}
+
+#tsel::before {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  background: rgba(26, 26, 30, 0.96);
+  z-index: 0;
+  pointer-events: none;
+}
+
+#tsel > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* ── Target Sidebar Rows ─────────────────────────────────────── */
+.tsel-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  margin-bottom: var(--space-2);
+  background: var(--surface-glass);
+  border: 1px solid var(--surface-glass-border);
+  transition: background-color var(--transition-fast);
+}
+
+.tsel-row:hover {
+  background: var(--surface-glass-hover);
+}
+
+.tsel-num {
+  flex: 0 0 20px;
+  color: var(--text-tertiary);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  text-align: center;
+}
+
+.tsel-fields {
+  flex: 1;
+  display: flex;
+  gap: var(--space-2);
+}
+
+.tsel-fields select:first-child {
+  flex: 2;
+}
+
+.tsel-fields select:last-child {
+  flex: 1;
+}
+
+.offcanvas-header {
+  border-bottom: 1px solid var(--line-primary);
+  padding: var(--space-4) var(--space-5);
+}
+
+.offcanvas-title {
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  color: var(--text-primary);
+}
+
+.offcanvas-body {
+  padding: var(--space-4) var(--space-5);
+}
+
+.offcanvas .btn-close {
+  filter: invert(1) grayscale(100%) brightness(200%);
+  opacity: 0.6;
+}
+
+.offcanvas .btn-close:hover {
+  opacity: 1;
+}
+
+/* Offcanvas backdrop */
+.offcanvas-backdrop.show {
+  background-color: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+}
+
+/* ── Form Controls ────────────────────────────────────────────── */
+.form-select,
+.form-control {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+  border: 1px solid var(--line-primary);
+  color: var(--text-primary);
+  border-radius: 0;
+  font-size: 13px;
+  padding: 0.5rem 0.75rem;
+  min-height: 44px;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.form-select:focus,
+.form-control:focus {
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 2px var(--accent-glow);
+  background-color: rgba(255, 255, 255, 0.12) !important;
+  color: var(--text-primary);
+}
+
+.form-select option {
+  background-color: var(--surface-secondary);
+  color: var(--text-primary);
+}
+
+/* ── Game-Specific Text Colors ────────────────────────────────── */
+/* These classes are applied by snp.js to skill names, select options,
+   and labels. text-black is the critical override: Bootstrap default
+   renders as #000 which is invisible on our dark surface. */
+.text-danger {
+  color: var(--game-fire) !important;
+  font-size: 12px;
+}
+
+.text-warning {
+  color: var(--game-sword) !important;
+  font-size: 12px;
+}
+
+.text-primary {
+  color: var(--game-thunder) !important;
+  font-size: 12px;
+}
+
+.text-black {
+  color: var(--game-tribe) !important;
+  font-size: 12px;
+}
+
+.text-info {
+  color: var(--text-secondary) !important;
+  font-size: 12px;
+}
+
+/* Game-type colors inside select options (set by JS) */
+select option.text-danger { color: var(--game-fire); }
+select option.text-warning { color: var(--game-sword); }
+select option.text-primary { color: var(--game-thunder); }
+select option.text-black { color: var(--game-tribe); }
+
+/* ── Fragment Count Inputs ────────────────────────────────────── */
+#fragpcnt, #fragbcnt {
+  font-size: 13px;
+  font-family: var(--font-mono);
+}
+
+/* ── Dynamic Shop Grid (generated by snp.js buildShopSelector / buildKeepSelector) ── */
+/* These have hardcoded inline style: background-color: rgba(255,255,255,0.9)
+   We must override with !important to convert white boxes → dark glass */
+#ssshop .col,
+#ssshop [class*="col-"],
+#sfshop .col,
+#sfshop [class*="col-"],
+#kshop .col,
+#kshop [class*="col-"] {
+  background-color: var(--surface-glass-strong) !important;
+  border-color: var(--line-primary) !important;
+  color: var(--text-primary);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+#ssshop h6,
+#sfshop h6,
+#kshop h6 {
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+#ssshop hr,
+#sfshop hr,
+#kshop hr {
+  border-color: var(--line-primary);
+  opacity: 0.4;
+}
+
+/* Skill names inside shop grids */
+#ssshop p,
+#sfshop p,
+#kshop p {
+  color: var(--text-primary);
+  font-size: 12px;
+  margin-bottom: 0.35rem !important;
+}
+
+/* +/- buttons inside shop grids — small circles */
+#ssshop button,
+#sfshop button {
+  background-color: transparent;
+  color: var(--text-secondary) !important;
+  border: 1px solid var(--line-primary) !important;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 18px;
+  padding: 0;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  vertical-align: middle;
+  text-align: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#ssshop button:hover,
+#sfshop button:hover {
+  background-color: var(--accent-primary);
+  border-color: var(--accent-primary);
+  color: var(--text-on-accent);
+}
+
+#ssshop button:disabled,
+#sfshop button:disabled {
+  opacity: 0.2;
+  cursor: not-allowed;
+  color: var(--text-tertiary) !important;
+  border-color: var(--text-tertiary) !important;
+}
+
+#ssshop button:active:not(:disabled),
+#sfshop button:active:not(:disabled) {
+  transform: scale(0.9);
+}
+
+/* Badge overrides — grey filled rounded rectangle, white text */
+#ssshop .badge.text-bg-secondary,
+#sfshop .badge.text-bg-secondary {
+  background-color: var(--text-secondary) !important;
+  color: var(--surface-primary) !important;
+  font-family: var(--font-mono);
+  font-weight: 400;
+  font-size: 9px;
+  border: none;
+  border-radius: 3px;
+  padding: 2px 4px;
+  min-width: 1.5rem;
+  text-align: center;
+  vertical-align: middle;
+  line-height: 1.2;
+  display: inline-block;
+}
+
+/* Hide empty badges (no number) */
+#ssshop .badge.text-bg-secondary:empty,
+#sfshop .badge.text-bg-secondary:empty {
+  display: none;
+}
+
+/* Skill rows — force single line with inline layout */
+#ssshop p,
+#sfshop p {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+  font-size: 12px;
+  margin-bottom: 0.3rem !important;
+  color: var(--text-primary);
+}
+
+#ssshop p > span:first-child,
+#sfshop p > span:first-child {
+  min-width: 3em;
+}
+
+/* Keep panel — fragment count beside skill name */
+.keep-amount {
+  color: var(--text-tertiary);
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+
+/* Keep panel checkboxes */
+#kshop .form-check-label {
+  font-size: 12px;
+}
+
+#kshop .form-check-input {
+  background-color: rgba(255, 255, 255, 0.1);
+  border-color: var(--line-primary);
+  border-radius: 0;
+}
+
+#kshop .form-check-input:checked {
+  background-color: var(--accent-primary);
+  border-color: var(--accent-primary);
+}
+
+/* ── Inline Edit Input (badgeClickToEdit in snp.js) ───────────── */
+/* Match the rounded rectangle badge style, hide spin arrows */
+.badge input[type="number"],
+#ssshop input[type="number"],
+#sfshop input[type="number"] {
+  background-color: var(--text-secondary) !important;
+  color: var(--surface-primary) !important;
+  border: none !important;
+  border-radius: 4px !important;
+  font-family: var(--font-mono) !important;
+  font-weight: 400 !important;
+  font-size: 10px !important;
+  padding: 2px 1px !important;
+  width: 30px !important;
+  outline: none !important;
+  box-shadow: 0 0 0 1px var(--accent-primary) !important;
+  -moz-appearance: textfield !important;
+  min-height: auto !important;
+  height: auto !important;
+  text-align: center !important;
+}
+
+.badge input[type="number"]::-webkit-outer-spin-button,
+.badge input[type="number"]::-webkit-inner-spin-button,
+#ssshop input[type="number"]::-webkit-outer-spin-button,
+#ssshop input[type="number"]::-webkit-inner-spin-button,
+#sfshop input[type="number"]::-webkit-outer-spin-button,
+#sfshop input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none !important;
+  margin: 0 !important;
+  display: none !important;
+}
+
+/* ── Keep List ────────────────────────────────────────────────── */
+#keeplist {
+  color: var(--game-thunder) !important;
+  cursor: pointer;
+  transition: color var(--transition-fast);
+}
+
+#keeplist:hover {
+  color: var(--accent-primary) !important;
+}
+
+/* ── Dirty State Indicators ───────────────────────────────────── */
+#srcDirty, #tgtDirty {
+  color: var(--accent-primary) !important;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+/* ── Divider ──────────────────────────────────────────────────── */
+hr.divider {
+  border-color: var(--line-primary);
+  opacity: 0.5;
+  margin: var(--space-4) 0;
+}
+
+/* ── Offcanvas Shop Sections ──────────────────────────────────── */
+#ssshop, #sfshop, #kshop {
+  color: var(--text-primary);
+}
+
+#ssshop .btn, #sfshop .btn, #kshop .btn {
+  border-radius: 0;
+}
+
+/* ── Row Numbers ──────────────────────────────────────────────── */
+th[scope="row"] {
+  color: var(--text-tertiary);
+  font-weight: 500;
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+
+/* ── Clickable Table Rows (tbody rows open offcanvas panels) ──── */
+#stbl > tbody > tr,
+#ttbl > tbody > tr {
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
+}
+
+#stbl > tbody > tr:hover,
+#ttbl > tbody > tr:hover {
+  background-color: var(--surface-glass-hover) !important;
+}
+
+#stbl > tbody > tr:active,
+#ttbl > tbody > tr:active {
+  background-color: rgba(232, 91, 84, 0.08) !important;
+}
+
+/* Footer rows: sfs (unused frags), skp (keep list) are also clickable */
+#sfs,
+#skp {
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
+}
+
+#sfs:hover,
+#skp:hover {
+  background-color: var(--surface-glass-hover) !important;
+}
+
+/* ── Level Column Text ────────────────────────────────────────── */
+/* Level text (天3, 玄2, etc) rendered by JS via innerText */
+td[id^="slevel"],
+td[id^="tlevel"] {
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+/* ── Numeric Data Cells ───────────────────────────────────────── */
+td[id^="ssrc"],
+td[id^="tsrc"] {
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Select Dropdowns Inside Offcanvas ────────────────────────── */
+/* The JS adds game-type color classes (.text-danger etc) to selects.
+   Ensure they remain readable on dark bg. */
+#sl1, #sll1,
+#tl0, #tl1, #tl2, #tl3, #tl4, #tl5,
+#tll0, #tll1, #tll2, #tll3, #tll4, #tll5 {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+  border: 1px solid var(--line-primary);
+  color: var(--text-primary);
+  font-size: 13px;
+  min-height: 44px;
+}
+
+/* When JS adds .text-black to a select, override to light color */
+select.text-black {
+  color: var(--game-tribe) !important;
+}
+
+/* Ssrccnt info box inside offcanvas - already has inline bg, override */
+#sldiv2 h6 {
+  color: var(--text-secondary);
+}
+
+#ssrccnt {
+  color: var(--accent-primary) !important;
+  font-weight: 700;
+  font-family: var(--font-mono);
+}
+
+/* ── Clickable Table Cells ────────────────────────────────────── */
+td[style*="cursor:pointer"],
+td[style*="cursor: pointer"] {
+  transition: color var(--transition-fast);
+}
+
+td[style*="cursor:pointer"]:hover,
+td[style*="cursor: pointer"]:hover {
+  color: var(--accent-primary) !important;
+}
+
+/* ── Footer Accent Line ───────────────────────────────────────── */
+.site-footer {
+  margin-top: var(--space-8);
+  padding: var(--space-4) 0;
+  text-align: center;
+  position: relative;
+}
+
+.site-footer::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 1px;
+  background: var(--line-primary);
+}
+
+.site-footer::after {
+  content: '';
+  position: absolute;
+  top: -3px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 6px;
+  height: 6px;
+  background: var(--accent-primary);
+  border-radius: 50%;
+  filter: blur(1.5px);
+}
+
+.site-footer-text {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  letter-spacing: 0.02em;
+}
+
+/* ── Responsive ───────────────────────────────────────────────── */
+@media (max-width: 991px) {
+  .table-card {
+    padding: var(--space-3);
+  }
+}
+
+@media (max-width: 767px) {
+  .page-title {
+    font-size: 1.5rem;
+  }
+
+  .site-header {
+    padding: var(--space-4) 0 var(--space-3);
+  }
+
+  #stbl, #ttbl {
+    font-size: 11px;
+  }
+
+  #stbl thead th, #stbl thead td,
+  #ttbl thead th, #ttbl thead td {
+    font-size: 10px;
+    padding: var(--space-1) var(--space-2);
+  }
+
+  #stbl td, #stbl th,
+  #ttbl td, #ttbl th {
+    padding: var(--space-1) var(--space-2);
+  }
+
+  .badge.text-bg-secondary {
+    font-size: 12px;
+    padding: 4px 10px;
+  }
+}
+
+@media (max-width: 479px) {
+  body {
+    font-size: 12px;
+  }
+
+  .page-title {
+    font-size: 1.25rem;
+  }
+
+  .table-card {
+    padding: var(--space-2);
+    border-left: none;
+    border-right: none;
+  }
+}
+
+/* ── Accessibility: Focus States ──────────────────────────────── */
+*:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
+}
+
+.btn:focus-visible {
+  box-shadow: 0 0 0 3px var(--accent-glow);
+}
+
+/* ── Global Override: Any remaining white backgrounds ─────────── */
+/* snp.js shop grids use inline style background-color: rgba(255,255,255,0.9)
+   This nuclear override catches any element inside offcanvas with white bg */
+.offcanvas [style*="background-color: rgba(255, 255, 255"],
+.offcanvas [style*="background-color:rgba(255, 255, 255"],
+.offcanvas [style*="background-color: rgba(255,255,255"],
+.offcanvas [style*="background-color:rgba(255,255,255"] {
+  background-color: var(--surface-glass-strong) !important;
+  border-color: var(--line-primary) !important;
+  color: var(--text-primary) !important;
+}
+
+/* Labels and text inside offcanvas panels */
+.offcanvas label,
+.offcanvas h6,
+.offcanvas p {
+  color: var(--text-secondary);
+}
+
+.offcanvas .form-check-label {
+  color: inherit;
+}
+
+/* Skill name spans use game-type classes - ensure they override label color */
+.offcanvas span.text-danger { color: var(--game-fire) !important; }
+.offcanvas span.text-warning { color: var(--game-sword) !important; }
+.offcanvas span.text-primary { color: var(--game-thunder) !important; }
+.offcanvas span.text-black { color: var(--game-tribe) !important; }
+.offcanvas label.text-danger { color: var(--game-fire) !important; }
+.offcanvas label.text-warning { color: var(--game-sword) !important; }
+.offcanvas label.text-primary { color: var(--game-thunder) !important; }
+.offcanvas label.text-black { color: var(--game-tribe) !important; }
+
+/* ── Reduced Motion ───────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}
+
+/* ── Selection Color ──────────────────────────────────────────── */
+::selection {
+  background: var(--accent-primary);
+  color: var(--text-on-accent);
+}
+
+/* ── Checkbox Overrides ───────────────────────────────────────── */
+.form-check-input {
+  background-color: rgba(255, 255, 255, 0.1);
+  border-color: var(--line-primary);
+  border-radius: 0;
+}
+
+.form-check-input:checked {
+  background-color: var(--accent-primary);
+  border-color: var(--accent-primary);
+}
+
+.form-check-input:focus {
+  box-shadow: 0 0 0 2px var(--accent-glow);
+}
+
+/* ── Bootstrap Table Override ─────────────────────────────────── */
+.table {
+  --bs-table-bg: transparent;
+  --bs-table-striped-bg: transparent;
+  --bs-table-hover-bg: var(--surface-glass-hover);
+  --bs-table-border-color: var(--line-secondary);
+  color: var(--text-primary);
+  margin-bottom: 0;
+}
