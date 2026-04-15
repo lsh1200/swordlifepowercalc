@@ -278,86 +278,63 @@ function updatedatadone() {
 }
 
 // ===== Compact Code Encoding =====
-// Bit-packed encoding: skill_id=6b, level=4b, amount_unit=5b, count=3-4b
+// Bit-packed + base62: ~92 chars for full state with all fragments
+var B62 = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
+
 function encodeState() {
 	var bits = [];
 	function w(val, n) { for (var i = n - 1; i >= 0; i--) bits.push((val >> i) & 1); }
 
-	// source: 6 slots
 	for (var i = 0; i < SLOT_COUNT; i++) {
 		var s = source[i];
-		w(s.id, 6); w(s.level, 4); w(s.src.length, 3);
-		for (var j = 0; j < s.src.length; j++) {
-			w(s.src[j].id, 6); w(s.src[j].amount / FRAGMENT_UNIT, 5);
-		}
+		var nz = s.src.filter(function(f) { return f.amount > 0; });
+		w(s.id, 6); w(s.level, 4); w(nz.length, 3);
+		for (var j = 0; j < nz.length; j++) { w(nz[j].id, 6); w(nz[j].amount / FRAGMENT_UNIT, 5); }
 	}
-	// frags
-	w(frags.length, 4);
-	for (var i = 0; i < frags.length; i++) {
-		w(frags[i].id, 6); w(frags[i].amount / FRAGMENT_UNIT, 5);
-	}
-	// fragp, fragb
+	var nzf = frags.filter(function(f) { return f.amount > 0; });
+	w(nzf.length, 4);
+	for (var i = 0; i < nzf.length; i++) { w(nzf[i].id, 6); w(nzf[i].amount / FRAGMENT_UNIT, 5); }
 	w(fragp, 14); w(fragb, 15);
-	// target: 6 slots
-	for (var i = 0; i < SLOT_COUNT; i++) {
-		w(target[i].id, 6); w(target[i].level, 4);
-	}
-	// keep
+	for (var i = 0; i < SLOT_COUNT; i++) { w(target[i].id, 6); w(target[i].level, 4); }
 	w(keep.length, 3);
 	for (var i = 0; i < keep.length; i++) w(keep[i], 6);
 
-	// Pad to byte boundary
 	while (bits.length % 8) bits.push(0);
-
-	// Convert bits to bytes
 	var bytes = [];
 	for (var i = 0; i < bits.length; i += 8) {
-		var b = 0;
-		for (var j = 0; j < 8; j++) b = (b << 1) | bits[i + j];
-		bytes.push(b);
+		var b = 0; for (var j = 0; j < 8; j++) b = (b << 1) | bits[i + j]; bytes.push(b);
 	}
 
-	// Base62 encode (0-9, A-Z, a-z) for shorter string
-	var chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
 	var num = 0n;
 	for (var i = 0; i < bytes.length; i++) num = num * 256n + BigInt(bytes[i]);
 	var code = '';
-	while (num > 0n) { code = chars[Number(num % 62n)] + code; num = num / 62n; }
-
-	return 'WJCS-' + code;
+	while (num > 0n) { code = B62[Number(num % 62n)] + code; num = num / 62n; }
+	return code;
 }
 
 function decodeState(code) {
 	try {
-		var parts = code.split('-');
-		if (parts[0] !== 'WJCS') return null;
-		var raw = parts.slice(1).join('');
-
-		// Base62 decode
-		var chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
+		code = code.trim();
 		var num = 0n;
-		for (var i = 0; i < raw.length; i++) num = num * 62n + BigInt(chars.indexOf(raw[i]));
+		for (var i = 0; i < code.length; i++) {
+			var idx = B62.indexOf(code[i]);
+			if (idx < 0) return null;
+			num = num * 62n + BigInt(idx);
+		}
 
-		// Figure out byte count from the BigInt
 		var hex = num.toString(16);
 		if (hex.length % 2) hex = '0' + hex;
 		var bytes = [];
 		for (var i = 0; i < hex.length; i += 2) bytes.push(parseInt(hex.substring(i, i + 2), 16));
 
-		// Convert bytes to bits
 		var bits = [];
 		for (var i = 0; i < bytes.length; i++) {
 			for (var j = 7; j >= 0; j--) bits.push((bytes[i] >> j) & 1);
 		}
 
 		var pos = 0;
-		function r(n) {
-			var v = 0;
-			for (var i = 0; i < n; i++) v = (v << 1) | (bits[pos++] || 0);
-			return v;
-		}
+		function r(n) { var v = 0; for (var i = 0; i < n; i++) v = (v << 1) | (bits[pos++] || 0); return v; }
 
-		// source
 		var src = [];
 		for (var i = 0; i < SLOT_COUNT; i++) {
 			var id = r(6), lv = r(4), sc = r(3);
@@ -383,55 +360,15 @@ function decodeState(code) {
 
 function generateCode() {
 	var code = encodeState();
-	var box = document.getElementById('codeBox');
-	box.value = code;
-	box.removeAttribute('readonly');
-	box.readOnly = true;
-	showShareToast('配置碼已生成！');
-}
-
-function copyCode() {
-	var box = document.getElementById('codeBox');
-	if (!box.value) { generateCode(); }
-	box.select();
-	box.setSelectionRange(0, 99999);
-	var ok = false;
-	try { ok = document.execCommand('copy'); } catch (e) { }
-	if (ok) {
-		showShareToast('已複製！');
-	} else {
-		showShareToast('請手動複製');
-	}
+	document.getElementById('codeBox').value = code;
+	showShareToast('已生成！點擊輸入框可全選複製');
 }
 
 function loadCode() {
 	var box = document.getElementById('codeBox');
-	box.removeAttribute('readonly');
-	box.readOnly = false;
-	box.value = '';
-	box.placeholder = '在此貼上配置碼，再點擊匯入';
-	box.focus();
-
-	// If box already has a pasted code, load it
-	setTimeout(function() {
-		if (box.value) applyCode(box.value);
-	}, 100);
-
-	// Listen for paste or manual entry then click
-	box.onkeydown = function(e) {
-		if (e.key === 'Enter') {
-			applyCode(box.value);
-			box.onkeydown = null;
-		}
-	};
-	box.onpaste = function() {
-		setTimeout(function() { applyCode(box.value); box.onpaste = null; }, 50);
-	};
-}
-
-function applyCode(code) {
-	if (!code) return;
-	var data = decodeState(code.trim());
+	var code = box.value.trim();
+	if (!code) { showShareToast('請先貼上配置碼！'); box.focus(); return; }
+	var data = decodeState(code);
 	if (data && validateUrlData(data)) {
 		source = data.source;
 		frags = data.frags;
@@ -444,9 +381,6 @@ function applyCode(code) {
 		refreshtargetpowerview();
 		refreshkeepview();
 		computesuperpower();
-		var box = document.getElementById('codeBox');
-		box.readOnly = true;
-		box.placeholder = '貼上配置碼或點擊生成';
 		showShareToast('配置已匯入！');
 	} else {
 		showShareToast('配置碼無效！');
@@ -1067,7 +1001,6 @@ function discardTarget() {
 window.discardSource = discardSource;
 window.discardTarget = discardTarget;
 window.generateCode = generateCode;
-window.copyCode = copyCode;
 window.loadCode = loadCode;
 window.encodeState = encodeState;
 window.decodeState = decodeState;

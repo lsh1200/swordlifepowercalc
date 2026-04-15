@@ -26,6 +26,7 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
   <link rel="stylesheet" href="css/styles.css?v=51">
   <script src="js/vendor/jquery.js"></script>
+  <script src="js/vendor/lz-string.min.js"></script>
 </head>
 <body>
   <div class="container-fluid" style="max-width:1152px">
@@ -53,12 +54,10 @@
           <h6>4.輸入防呆有待完善，可能有bug請慎入</h6>
           <h6>5.配置自動保存，關閉瀏覽器也不會丟失</h6>
           <h6 style="margin-top:0.5rem">
-            <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
-              <input id="codeBox" type="text" class="form-control form-control-sm" placeholder="貼上配置碼或點擊生成" style="flex:1;min-width:200px;max-width:400px;font-family:var(--font-mono);font-size:11px" readonly>
-              <button class="btn btn-outline-share btn-sm" onclick="generateCode()">生成</button>
-              <button class="btn btn-outline-share btn-sm" onclick="copyCode()">複製</button>
-              <button class="btn btn-outline-share btn-sm" onclick="loadCode()">匯入</button>
-            </div>
+            <label for="codeBox" style="color:var(--text-secondary);font-size:12px">配置碼：</label><br>
+            <input id="codeBox" type="text" class="form-control form-control-sm" placeholder="點擊「生成」取得配置碼，或貼上朋友的配置碼後點擊「匯入」" onfocus="this.select()" style="font-family:var(--font-mono);font-size:12px;margin:4px 0"><br>
+            <button class="btn btn-outline-share btn-sm" onclick="generateCode()">生成配置碼</button>
+            <button class="btn btn-outline-share btn-sm" onclick="loadCode()">匯入配置碼</button>
           </h6>
         </div>
         <div id="shareToast" class="share-toast" style="display:none"></div>
@@ -276,7 +275,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/pixi.js@7.3.3/dist/pixi.min.js"></script>
-  <script src="js/snp.js?v=61"></script>
+  <script src="js/snp.js?v=63"></script>
   <script src="js/character-live2d.js?v=44"></script>
 </body>
 </html>
