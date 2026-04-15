@@ -44,6 +44,7 @@
   var currentParallaxY = 0;
   var targetParallaxX = 0;
   var targetParallaxY = 0;
+  var hoverAmount = 0; // 0=not hovering, 1=fully hovering (lerped)
 
   // Blink
   var blinkTimer = 0;
@@ -133,17 +134,21 @@
       var bob = Math.sin(time * 1.0) * 3;
       sprite.y = bob;
 
+      // Lerp hover amount — slow fade out when cursor leaves
+      var hoverTarget = isHovering ? 1 : 0;
+      var hoverLerp = isHovering ? 0.06 : 0.003;
+      hoverAmount += (hoverTarget - hoverAmount) * hoverLerp;
+
       if (isHovering) {
         targetParallaxX = (mouseX - s.w / 2) * 0.04;
         targetParallaxY = (mouseY - s.h / 2) * 0.02;
-      } else {
-        targetParallaxX = 0;
-        targetParallaxY = 0;
       }
-      // Smooth lerp — fast follow when hovering, very slow recovery when leaving
-      var lerpSpeed = isHovering ? 0.05 : 0.005;
-      currentParallaxX += (targetParallaxX - currentParallaxX) * lerpSpeed;
-      currentParallaxY += (targetParallaxY - currentParallaxY) * lerpSpeed;
+      // When not hovering, target stays at last position and slowly decays
+      targetParallaxX *= isHovering ? 1 : 0.998;
+      targetParallaxY *= isHovering ? 1 : 0.998;
+
+      currentParallaxX += (targetParallaxX - currentParallaxX) * 0.05;
+      currentParallaxY += (targetParallaxY - currentParallaxY) * 0.05;
       sprite.x += currentParallaxX;
       sprite.y += currentParallaxY;
 
@@ -181,14 +186,11 @@
       }
     }
 
-    // Displacement
+    // Displacement — hover boost uses smooth hoverAmount
     if (dispFilter) {
-      dispFilter.scale.x = 8 + Math.sin(time * 1.3) * 5;
-      dispFilter.scale.y = 5 + Math.cos(time * 1.8) * 3;
-      if (isHovering) {
-        dispFilter.scale.x *= 1.5;
-        dispFilter.scale.y *= 1.5;
-      }
+      var hoverBoost = 1 + hoverAmount * 0.5;
+      dispFilter.scale.x = (8 + Math.sin(time * 1.3) * 5) * hoverBoost;
+      dispFilter.scale.y = (5 + Math.cos(time * 1.8) * 3) * hoverBoost;
     }
 
     if (dispSprite) {
