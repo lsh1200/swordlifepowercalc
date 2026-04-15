@@ -536,7 +536,7 @@ function computesuperpower() {
 	// Phase 3: Convert same-shop fragments to fill remaining body needs
 	// Skip fragments whose skill ID is in the keep list (body fragments preserved)
 	var keepSet = new Set(keep);
-	var conversionHtml = '';
+	var conversionParts = [];
 	var conversionCount = 0;
 	targetNeeds.forEach(function(item) {
 		var skill = skills[item.id];
@@ -544,7 +544,7 @@ function computesuperpower() {
 			if (item.body === 0) return;
 			if (amount > 0 && item.id !== fragId && skills[fragId].shop === skill.shop && !keepSet.has(fragId)) {
 				var used = Math.min(item.body, amount);
-				conversionHtml += skills[fragId].name + " x" + (used / FRAGMENT_UNIT) + " → " + skills[item.id].name + "<br />";
+				conversionParts.push(skills[fragId].name + "轉" + (used / FRAGMENT_UNIT) + "次給" + skills[item.id].name);
 				conversionCount += used / FRAGMENT_UNIT;
 				fragmentMap.set(fragId, fragmentMap.get(fragId) - used);
 				item.body -= used;
@@ -552,9 +552,9 @@ function computesuperpower() {
 			}
 		});
 	});
+	var conversionHtml = '';
 	if (conversionCount > 0) {
-		conversionHtml = "我我我……我算出來了！你、你要這樣轉換……（小聲）<br />" + conversionHtml;
-		conversionHtml += "一共轉換 " + conversionCount + " 次……別、別問我怎麼算的，我只是……剛好路過而已！<br />";
+		conversionHtml = "我我我……我算出來了！你、你把" + conversionParts.join("，") + "……一共" + conversionCount + "次……別、別問我怎麼算的，我只是……剛好路過而已！<br />";
 	} else {
 		conversionHtml = "咦？不、不用轉換呢……你的殘卷剛剛好……（鬆了口氣）<br />";
 	}
@@ -599,12 +599,12 @@ function computesuperpower() {
 	var deficitHtml = '';
 	var hasDeficit = deficitItems.length > 0 || missingOther > 0 || missingPurple > 0 || missingBlue > 0;
 	if (hasDeficit) {
-		deficitHtml += "糟、糟糕……好像不夠用……我我我……（牙關打顫）<br />";
-		deficitItems.forEach(function(d) { deficitHtml += "　還差 " + d + "<br />"; });
-		if (missingOther > 0) deficitHtml += "　仙品殘卷缺: " + missingOther + "<br />";
-		if (missingPurple > 0) deficitHtml += "　極品殘卷缺: " + missingPurple + "<br />";
-		if (missingBlue > 0) deficitHtml += "　上品殘卷缺: " + missingBlue + "<br />";
-		deficitHtml += "不、不過沒關係的！我……我陪你去找……（瑟瑟發抖）<br />";
+		var missingParts = [];
+		if (deficitItems.length > 0) missingParts.push(deficitItems.join("跟"));
+		if (missingOther > 0) missingParts.push("仙品殘卷" + missingOther + "個");
+		if (missingPurple > 0) missingParts.push("極品殘卷" + missingPurple + "個");
+		if (missingBlue > 0) missingParts.push("上品殘卷" + missingBlue + "個");
+		deficitHtml += "糟、糟糕……還差" + missingParts.join("、") + "……（牙關打顫）不、不過別擔心嘛……慢慢湊就好了，我我我……會在這裡等你的……（小聲）<br />";
 	} else {
 		deficitHtml += "全、全部夠了！……我我我沒有很開心啦！只是……剛好鬆了口氣而已……<br />";
 	}
@@ -612,18 +612,17 @@ function computesuperpower() {
 	var remainderHtml = '';
 	var hasRemainder = totalGold > 0 || totalPurple > 0 || totalBlue > 0;
 	if (hasRemainder) {
-		remainderHtml += "對了……還、還剩下一些……你收好啊！<br />";
+		var leftParts = [];
 		if (totalGold > 0) {
-			remainderHtml += "　仙品殘卷剩: " + totalGold + "<br />";
+			var detailParts = [];
 			fragmentMap.forEach(function(amount, fragId) {
-				if (amount > 0) {
-					remainderHtml += "　　· " + skills[fragId].name + "(" + amount + ")<br />";
-				}
+				if (amount > 0) detailParts.push(skills[fragId].name + amount + "個");
 			});
+			leftParts.push("仙品殘卷" + totalGold + "個" + (detailParts.length > 0 ? "（" + detailParts.join("、") + "）" : ""));
 		}
-		if (totalPurple > 0) remainderHtml += "　極品殘卷剩: " + totalPurple + "<br />";
-		if (totalBlue > 0) remainderHtml += "　上品殘卷剩: " + totalBlue + "<br />";
-		remainderHtml += "下……下次要算的話……我、我也不是不可以幫你……（別過頭）<br />";
+		if (totalPurple > 0) leftParts.push("極品殘卷" + totalPurple + "個");
+		if (totalBlue > 0) leftParts.push("上品殘卷" + totalBlue + "個");
+		remainderHtml += "對了……算完還剩" + leftParts.join("、") + "……你、你收好啊！下……下次要算的話……我、我也不是不可以幫你……（別過頭）<br />";
 	} else {
 		remainderHtml += "剛剛好用完了……好像踩到了什麼好運呢……（小聲）<br />";
 	}
