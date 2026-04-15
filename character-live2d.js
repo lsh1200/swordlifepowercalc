@@ -1,8 +1,10 @@
 // Character Live2D-style Animation
-// Uses PixiJS displacement filter + mesh eyelid overlay blink
+// Displacement filter + eyelash-sweep blink
 (function () {
   var CHAR_IMG = 'character-clean.png';
   var DISP_IMG = 'character-displacement.png';
+  var LASH_L = 'lash-l.png';
+  var LASH_R = 'lash-r.png';
 
   var canvas = document.getElementById('charCanvas');
   if (!canvas) return;
@@ -32,7 +34,8 @@
   var sprite = null;
   var dispSprite = null;
   var dispFilter = null;
-  var eyeLids = [];
+  var blinkData = [];
+  var skinGfx = null;
   var time = 0;
   var mouseX = 0;
   var mouseY = 0;
@@ -44,37 +47,29 @@
   var blinkPhase = 0;
   var BLINK_SPEED = 2.5;
 
-  // Eye definitions (normalized to image 591x848)
-  // skinRegion: the thin strip of skin ABOVE the eye (the eyelid texture source)
-  // eyeTop: where the eye opening starts (top of iris)
-  // eyeBottom: where the eye opening ends (bottom of eye)
-  // Use nose bridge area as skin texture source — clean skin, no hair/eyebrow
-  var skinSource = { x: 290/591, y: 243/848, w: 35/591, h: 12/848 };
+  // Skin color sampled from nose bridge
+  var SKIN_COLOR = 0xD9C6BF;
 
+  // Eye definitions (normalized to 591x848 image)
   var eyeDefs = [
     { // Left eye
-      skinUV: skinSource,
-      eyeTop: 230/848,
-      eyeBottom: 262/848,
-      left: 220/591,
-      right: 305/591,
+      lashY: 229/848,      // where the lash strip sits (top of eye)
+      eyeBottom: 262/848,   // bottom of eye opening
+      left: 225/591,
+      right: 300/591,
+      lashH: 5/848,         // lash strip height
     },
     { // Right eye
-      skinUV: skinSource,
-      eyeTop: 228/848,
+      lashY: 227/848,
       eyeBottom: 260/848,
-      left: 328/591,
+      left: 335/591,
       right: 393/591,
+      lashH: 5/848,
     }
   ];
 
-  var ROWS = 4;
-  var COLS = 4;
-
-  PIXI.Assets.load([CHAR_IMG, DISP_IMG]).then(function (textures) {
-    var charTex = textures[CHAR_IMG];
-
-    sprite = new PIXI.Sprite(charTex);
+  PIXI.Assets.load([CHAR_IMG, DISP_IMG, LASH_L, LASH_R]).then(function (textures) {
+    sprite = new PIXI.Sprite(textures[CHAR_IMG]);
     sprite.anchor.set(0.5, 0);
     app.stage.addChild(sprite);
 
@@ -84,33 +79,18 @@
     app.stage.addChild(dispSprite);
     sprite.filters = [dispFilter];
 
-    // Create eyelid meshes — each maps UV to the skin strip above the eye
-    // The mesh starts as a thin strip at the eyelid crease
-    // During blink, the bottom vertices stretch DOWN to cover the eye
-    // Because the UV maps to skin texture, it paints skin over the eye
-    for (var e = 0; e < eyeDefs.length; e++) {
-      var def = eyeDefs[e];
+    // Skin fill layer (drawn behind lash sprites)
+    skinGfx = new PIXI.Graphics();
+    app.stage.addChild(skinGfx);
 
-      var mesh = new PIXI.SimplePlane(charTex, COLS + 1, ROWS + 1);
-      mesh.autoUpdate = true;
-
-      // UV: all rows map to the same thin skin strip (repeated vertically)
-      // This makes the whole mesh show skin texture regardless of how tall it stretches
-      var uvs = mesh.geometry.getBuffer('aTextureCoord').data;
-      for (var row = 0; row <= ROWS; row++) {
-        for (var col = 0; col <= COLS; col++) {
-          var idx = (row * (COLS + 1) + col) * 2;
-          var u = def.skinUV.x + (col / COLS) * def.skinUV.w;
-          // Map all rows to the same vertical band of skin
-          var v = def.skinUV.y + (row / ROWS) * def.skinUV.h;
-          uvs[idx] = u;
-          uvs[idx + 1] = v;
-        }
-      }
-      mesh.geometry.getBuffer('aTextureCoord').update();
-
-      app.stage.addChild(mesh);
-      eyeLids.push({ mesh: mesh, def: def });
+    // Lash sprites
+    var lashTextures = [textures[LASH_L], textures[LASH_R]];
+    for (var i = 0; i < eyeDefs.length; i++) {
+      var lashSprite = new PIXI.Sprite(lashTextures[i]);
+      lashSprite.anchor.set(0, 0);
+      lashSprite.visible = false;
+      app.stage.addChild(lashSprite);
+      blinkData.push({ def: eyeDefs[i], lash: lashSprite });
     }
 
     fitSprite();
@@ -128,40 +108,6 @@
     sprite.scale.set(scale);
     sprite.x = s.w * 0.55;
     sprite.y = 0;
-  }
-
-  function positionLid(lid, spriteX, spriteY, scX, scY, closeness) {
-    var tw = sprite.texture.width;
-    var th = sprite.texture.height;
-    var def = lid.def;
-    var verts = lid.mesh.geometry.getBuffer('aVertexPosition').data;
-
-    var ox = spriteX - tw * scX * 0.5;
-
-    var lidLeft = ox + def.left * tw * scX;
-    var lidRight = ox + def.right * tw * scX;
-    var lidTop = spriteY + def.eyeTop * th * scY;
-    var lidBottom = spriteY + def.eyeBottom * th * scY;
-    var eyeHeight = lidBottom - lidTop;
-
-    var ease = closeness * closeness * (3 - 2 * closeness);
-
-    // When closed (ease=1): mesh covers from lidTop to lidBottom (full eye)
-    // When open (ease=0): mesh is zero height at lidTop (invisible)
-    var meshBottom = lidTop + eyeHeight * ease;
-
-    for (var row = 0; row <= ROWS; row++) {
-      for (var col = 0; col <= COLS; col++) {
-        var idx = (row * (COLS + 1) + col) * 2;
-        var x = lidLeft + (col / COLS) * (lidRight - lidLeft);
-        var y = lidTop + (row / ROWS) * (meshBottom - lidTop);
-        verts[idx] = x;
-        verts[idx + 1] = y;
-      }
-    }
-
-    lid.mesh.geometry.getBuffer('aVertexPosition').update();
-    lid.mesh.visible = ease > 0.01;
   }
 
   function animate(delta) {
@@ -209,13 +155,54 @@
           blinkPhase = 0;
         }
         closeness = Math.max(0, Math.min(1, closeness));
+        // Smoothstep
+        closeness = closeness * closeness * (3 - 2 * closeness);
       }
 
-      // Position eyelid meshes
+      // Calculate sprite transform values
       var scX = sprite.scale.x;
       var scY = sprite.scale.y;
-      for (var i = 0; i < eyeLids.length; i++) {
-        positionLid(eyeLids[i], sprite.x, sprite.y, scX, scY, closeness);
+      var ox = sprite.x - tw * scX * 0.5; // sprite left edge on screen
+      var oy = sprite.y; // sprite top edge on screen
+
+      // Draw skin fill and position lash sprites
+      if (skinGfx) {
+        skinGfx.clear();
+      }
+
+      for (var i = 0; i < blinkData.length; i++) {
+        var bd = blinkData[i];
+        var def = bd.def;
+
+        // Screen coordinates of this eye
+        var eyeLeft = ox + def.left * tw * scX;
+        var eyeRight = ox + def.right * tw * scX;
+        var eyeTop = oy + def.lashY * th * scY; // where lash normally sits
+        var eyeBottom = oy + def.eyeBottom * th * scY;
+        var lashScreenH = def.lashH * th * scY;
+        var eyeOpenH = eyeBottom - eyeTop;
+
+        if (closeness > 0.01) {
+          bd.lash.visible = true;
+
+          // Lash position: slides from eyeTop down to eyeBottom
+          var lashY = eyeTop + eyeOpenH * closeness;
+
+          // Position and scale lash sprite
+          bd.lash.x = eyeLeft;
+          bd.lash.y = lashY - lashScreenH; // lash sits just above the sweep line
+          bd.lash.width = eyeRight - eyeLeft;
+          bd.lash.height = lashScreenH;
+
+          // Skin fill: covers from eyeTop to lashY (area the lash has passed)
+          if (skinGfx) {
+            skinGfx.beginFill(SKIN_COLOR, 1);
+            skinGfx.drawRect(eyeLeft, eyeTop, eyeRight - eyeLeft, lashY - eyeTop - lashScreenH);
+            skinGfx.endFill();
+          }
+        } else {
+          bd.lash.visible = false;
+        }
       }
     }
 
