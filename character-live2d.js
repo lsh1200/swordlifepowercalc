@@ -52,18 +52,18 @@
 
   // Eye definitions (normalized to 591x848 image)
   var eyeDefs = [
-    { // Left eye
-      lashY: 229/848,      // where the lash strip sits (top of eye)
-      eyeBottom: 262/848,   // bottom of eye opening
-      left: 225/591,
-      right: 300/591,
-      lashH: 5/848,         // lash strip height
+    { // Left eye — tight bounds around actual eye opening only
+      lashY: 232/848,
+      eyeBottom: 252/848,
+      left: 236/591,
+      right: 290/591,
+      lashH: 5/848,
     },
     { // Right eye
-      lashY: 227/848,
-      eyeBottom: 260/848,
-      left: 335/591,
-      right: 393/591,
+      lashY: 230/848,
+      eyeBottom: 250/848,
+      left: 340/591,
+      right: 382/591,
       lashH: 5/848,
     }
   ];
