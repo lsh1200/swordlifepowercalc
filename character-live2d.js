@@ -140,9 +140,10 @@
         targetParallaxX = 0;
         targetParallaxY = 0;
       }
-      // Smooth lerp so movement isn't instant
-      currentParallaxX += (targetParallaxX - currentParallaxX) * 0.05;
-      currentParallaxY += (targetParallaxY - currentParallaxY) * 0.05;
+      // Smooth lerp — fast follow when hovering, very slow recovery when leaving
+      var lerpSpeed = isHovering ? 0.05 : 0.005;
+      currentParallaxX += (targetParallaxX - currentParallaxX) * lerpSpeed;
+      currentParallaxY += (targetParallaxY - currentParallaxY) * lerpSpeed;
       sprite.x += currentParallaxX;
       sprite.y += currentParallaxY;
 
