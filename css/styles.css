@@ -748,6 +748,15 @@ select option.text-tribe-green { color: var(--game-tribe-green); }
   color: var(--text-primary);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
+  margin: 4px !important;
+  border-radius: 2px;
+}
+
+/* Shop grid layout — gaps between categories */
+#ssshop .row,
+#sfshop .row,
+#kshop .row {
+  gap: 8px;
 }
 
 #ssshop h6,
@@ -842,7 +851,7 @@ select option.text-tribe-green { color: var(--game-tribe-green); }
   display: none;
 }
 
-/* Skill rows — force single line with inline layout */
+/* Skill rows — name fixed width, buttons centered in remaining space */
 #ssshop p,
 #sfshop p {
   display: flex;
@@ -856,7 +865,19 @@ select option.text-tribe-green { color: var(--game-tribe-green); }
 
 #ssshop p > span:first-child,
 #sfshop p > span:first-child {
-  min-width: 3em;
+  min-width: 2.5em;
+  flex: 0 0 2.5em;
+}
+
+/* Center the buttons + badge group */
+#ssshop p > button,
+#sfshop p > button {
+  margin-left: 0;
+}
+
+#ssshop p > span.badge,
+#sfshop p > span.badge {
+  margin-left: auto;
 }
 
 /* Keep panel — fragment count beside skill name */
