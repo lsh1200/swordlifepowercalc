@@ -280,34 +280,23 @@ function updatedatadone() {
 function shareSetup() {
 	var state = getStateObject();
 	var url = window.location.origin + window.location.pathname + '?' + encodeURIComponent(JSON.stringify(state));
-	var copied = false;
-	if (navigator.clipboard && navigator.clipboard.writeText) {
-		try {
-			navigator.clipboard.writeText(url).then(function() {
-				showShareToast('已複製連結！');
-			}).catch(function() {
-				fallbackCopy(url);
-			});
-			return;
-		} catch (e) { }
-	}
-	fallbackCopy(url);
-}
-
-function fallbackCopy(text) {
 	var ta = document.createElement('textarea');
-	ta.value = text;
+	ta.value = url;
+	ta.setAttribute('readonly', '');
 	ta.style.position = 'fixed';
 	ta.style.left = '-9999px';
+	ta.style.opacity = '0';
 	document.body.appendChild(ta);
+	ta.focus();
 	ta.select();
-	try {
-		document.execCommand('copy');
-		showShareToast('已複製連結！');
-	} catch (e) {
-		prompt('複製此連結分享你的配置：', text);
-	}
+	var ok = false;
+	try { ok = document.execCommand('copy'); } catch (e) { }
 	document.body.removeChild(ta);
+	if (ok) {
+		showShareToast('已複製連結！');
+	} else {
+		window.prompt('複製此連結分享你的配置：', url);
+	}
 }
 
 function showShareToast(msg) {
