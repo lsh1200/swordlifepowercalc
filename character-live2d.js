@@ -45,7 +45,7 @@
   var blinkTimer = 0;
   var blinkInterval = 2;
   var blinkPhase = 0;
-  var BLINK_SPEED = 3.5;
+  var BLINK_SPEED = 7;
 
   // Eye patch positions in full 591x848 image (normalized)
   var leftEyePos  = { x: 210/591, y: 215/848, w: 90/591, h: 50/848 };
