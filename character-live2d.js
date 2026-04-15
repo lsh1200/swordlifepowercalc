@@ -130,8 +130,8 @@
       sprite.y = bob;
 
       if (isHovering) {
-        sprite.x += (mouseX - s.w / 2) * 0.04;
-        sprite.y += (mouseY - s.h / 2) * 0.02;
+        sprite.x += (mouseX - s.w / 2) * 0.012;
+        sprite.y += (mouseY - s.h / 2) * 0.006;
       }
 
       // Position eye overlays to match sprite
