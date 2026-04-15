@@ -750,23 +750,23 @@ select option.text-tribe-green { color: var(--game-tribe-green); }
   -webkit-backdrop-filter: blur(8px);
 }
 
-/* Shop grid: 2 boxes per row with gaps */
+/* Shop grid: 2 boxes per row with uniform gaps */
 #ssshop .row,
 #sfshop .row,
 #kshop .row {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 4px;
 }
 
 #ssshop .row > [class*="col"],
 #sfshop .row > [class*="col"],
 #kshop .row > [class*="col"] {
-  flex: 0 0 calc(50% - 4px);
-  max-width: calc(50% - 4px);
+  flex: 0 0 calc(50% - 2px);
+  max-width: calc(50% - 2px);
   min-width: 0;
   margin: 0 !important;
-  padding: 8px !important;
+  padding: 6px 8px !important;
 }
 
 #ssshop h6,
