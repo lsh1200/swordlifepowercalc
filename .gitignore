@@ -1,0 +1,55 @@
+node_modules/
+*.log
+
+# Debug/temp files
+face-debug*.png
+poly-debug*.png
+manual-poly-debug.png
+contour-debug.png
+bounds-debug.png
+purple-*.png
+debug-*.png
+verify-*.png
+compare-*.png
+hover-*.png
+blink-compare.png
+blink3-*.png
+meshblink-*.png
+ai-blink-*.png
+face2-*.png
+lid-*.png
+skin-*.png
+slow-*.png
+sweep-*.png
+lash-left-*.png
+lash-right-*.png
+strip-*.png
+fade-test*.png
+align-test*.png
+expand-test*.png
+v35-restored.png
+test-screenshot.png
+test-detail.png
+
+# Temp working files
+closed-eyes-raw.png
+closed-eyes-matched.png
+blink-overlay-test.png
+face-for-inpaint.png
+mask-for-inpaint.png
+full-for-inpaint.png
+full-mask-inpaint.png
+character.jpg
+font-test.html
+font-test.png
+ss-*.png
+ss*.mjs
+screenshot-panels.mjs
+screenshot*.png
+
+# OS
+.DS_Store
+Thumbs.db
+
+# gstack
+.gstack/
