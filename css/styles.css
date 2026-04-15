@@ -46,8 +46,9 @@
   /* Game Types */
   --game-fire: #e85b54;
   --game-sword: #fbbf24;
-  --game-thunder: #60a5fa;
-  --game-tribe: #c4b5fd;
+  --game-thunder: #b48ade;
+  --game-tribe-indigo: #7b6fde;
+  --game-tribe-green: #3dd9c0;
 
   /* Shadows */
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
@@ -699,7 +700,12 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .text-black {
-  color: var(--game-tribe) !important;
+  color: var(--game-tribe-indigo) !important;
+  font-size: 12px;
+}
+
+.text-tribe-green {
+  color: var(--game-tribe-green) !important;
   font-size: 12px;
 }
 
@@ -712,7 +718,8 @@ h1, h2, h3, h4, h5, h6 {
 select option.text-danger { color: var(--game-fire); }
 select option.text-warning { color: var(--game-sword); }
 select option.text-primary { color: var(--game-thunder); }
-select option.text-black { color: var(--game-tribe); }
+select option.text-black { color: var(--game-tribe-indigo); }
+select option.text-tribe-green { color: var(--game-tribe-green); }
 
 /* ── Fragment Count Inputs ────────────────────────────────────── */
 #fragpcnt, #fragbcnt {
@@ -1003,7 +1010,11 @@ td[id^="tsrc"] {
 
 /* When JS adds .text-black to a select, override to light color */
 select.text-black {
-  color: var(--game-tribe) !important;
+  color: var(--game-tribe-indigo) !important;
+}
+
+select.text-tribe-green {
+  color: var(--game-tribe-green) !important;
 }
 
 /* Ssrccnt info box inside offcanvas - already has inline bg, override */
@@ -1156,11 +1167,13 @@ td[style*="cursor: pointer"]:hover {
 .offcanvas span.text-danger { color: var(--game-fire) !important; }
 .offcanvas span.text-warning { color: var(--game-sword) !important; }
 .offcanvas span.text-primary { color: var(--game-thunder) !important; }
-.offcanvas span.text-black { color: var(--game-tribe) !important; }
+.offcanvas span.text-black { color: var(--game-tribe-indigo) !important; }
+.offcanvas span.text-tribe-green { color: var(--game-tribe-green) !important; }
 .offcanvas label.text-danger { color: var(--game-fire) !important; }
 .offcanvas label.text-warning { color: var(--game-sword) !important; }
 .offcanvas label.text-primary { color: var(--game-thunder) !important; }
-.offcanvas label.text-black { color: var(--game-tribe) !important; }
+.offcanvas label.text-black { color: var(--game-tribe-indigo) !important; }
+.offcanvas label.text-tribe-green { color: var(--game-tribe-green) !important; }
 
 /* ── Reduced Motion ───────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
