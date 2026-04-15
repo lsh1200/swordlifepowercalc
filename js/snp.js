@@ -142,10 +142,10 @@ var skills = [
 	{id:49, name:"嵐霆", shop:1, bound:3, type:2},
 	{id:50, name:"鬥辰", shop:2, bound:3, type:2},
 	{id:51, name:"崩雲", shop:3, bound:3, type:2},
-	{id:52, name:"幽蝕", shop:4, bound:4, type:3},
-	{id:53, name:"驚蟬", shop:4, bound:4, type:3},
-	{id:54, name:"蛻蛇", shop:4, bound:4, type:3},
-	{id:55, name:"祭律", shop:4, bound:4, type:3}
+	{id:52, name:"幽蝕", shop:4, bound:4, type:4},
+	{id:53, name:"驚蟬", shop:4, bound:4, type:4},
+	{id:54, name:"蛻蛇", shop:4, bound:4, type:4},
+	{id:55, name:"祭律", shop:4, bound:4, type:4}
 ];
 
 // ===== Application State =====
