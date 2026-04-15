@@ -1,39 +1,45 @@
-# 神通推演計算器 — 問劍長生
+# 神通推演計算器 V2.0 — 問劍長生
 # Superpower Deduction Calculator — Sword Life
 
-A fan-made calculator tool for the game **問劍長生** (Sword Life / Wen Jian Chang Sheng). Helps players plan skill fragment conversions, calculate deficits, and optimize their superpower builds.
+基於 [wuhao](https://github.com/wuhao-112/swordlifepowercalc) 大佬的神通推演計算器改版，新增玄鈺主題。
+她不在了，但至少這裡還留著她的聲音。
+
+A fan-made calculator for **問劍長生** (Sword Life). Forked from [wuhao-112](https://github.com/wuhao-112/swordlifepowercalc) with a 玄鈺 (Xuan Yu) character theme.
 
 **[Live Demo →](https://bit.ly/wjcs-calc)**
 
+## 新增功能
+
+- **配置碼分享** — 一組短碼即可保存和分享你的神通配置
+- **自動保存** — 關瀏覽器再開也不會丟失
+- **配色修正** — 雷系、百族顏色對應遊戲內
+- **玄鈺主題** — Live2D 風格動態角色（呼吸、飄動、眨眼、滑鼠互動）
+- **玄鈺語音報告** — 算完殘卷她會用她的方式跟你說結果
+- **暗色琉璃主題** — 仙俠風格 UI
+
 ## Features
 
-- **Fragment Conversion Planner** — calculates the optimal conversion path between skill fragments across shops
-- **Deficit & Remainder Report** — shows exactly what you're missing and what's left over
-- **Keep List** — mark skills to preserve from conversion
-- **Live2D-style Character** — 玄鈺 appears beside the report with breathing animation, displacement-based hair/robe flow, mouse parallax, and AI-generated eye blink
-- **In-character Dialog** — 玄鈺 narrates the calculation results in her shy, stuttering voice
-- **URL State** — save/share your build via URL parameters
-- **Dark Glassmorphism Theme** — xianxia-inspired UI with glass surfaces, accent glows, and background art
+- **Config Code Sharing** — compact code to save/share your setup
+- **Auto-save** — localStorage persists across sessions
+- **Color Correction** — thunder/tribe colors match in-game
+- **Live2D-style Character** — 玄鈺 with breathing, displacement flow, eye blink, mouse parallax
+- **In-character Dialog** — 玄鈺 narrates results in her shy, stuttering voice
+- **Dark Glassmorphism Theme** — xianxia-inspired UI
 
 ## Tech Stack
 
 - Vanilla HTML / CSS / JavaScript
-- [PixiJS 7](https://pixijs.com/) — character animation (displacement filter, sprite overlay blink)
-- [Bootstrap 5.3](https://getbootstrap.com/) — layout and components
-- [jQuery](https://jquery.com/) — DOM manipulation
+- [PixiJS 7](https://pixijs.com/) — character animation
+- [Bootstrap 5.3](https://getbootstrap.com/) — layout
 - GitHub Pages — hosting
 
-## Credits & Attribution
+## Credits
 
-### Original Calculator
-This project is forked from [**wuhao-112/swordlifepowercalc**](https://github.com/wuhao-112/swordlifepowercalc) — the original creator of the calculation logic and data. Thank you for building this tool for the community.
-
-### Game Assets
-Character art and game imagery are from **問劍長生** (Sword Life). All game assets, character designs, and related intellectual property belong to the original game developers. This is a fan-made tool and is not affiliated with or endorsed by the game's creators.
-
-### AI-Generated Content
-The closed-eye blink overlay was generated using AI inpainting. The character background was removed using [rembg](https://github.com/danielgatis/rembg).
+- **原版計算器** — [wuhao-112/swordlifepowercalc](https://github.com/wuhao-112/swordlifepowercalc)
+- **改版** — 小酥（幽夜丨小酥 · 追月逐星）
+- **遊戲素材** — 問劍長生，所有角色設計及素材歸原開發者所有
+- **AI 生成** — 閉眼圖使用 AI inpainting，背景移除使用 [rembg](https://github.com/danielgatis/rembg)
 
 ## License
 
-The calculator code is available for personal and fan-community use. Game assets (character images, background art) are **not** covered by any open-source license and remain the property of the original game developers.
+Calculator code available for personal and fan-community use. Game assets remain property of the original game developers.
