@@ -40,6 +40,10 @@
   var mouseX = 0;
   var mouseY = 0;
   var isHovering = false;
+  var currentParallaxX = 0;
+  var currentParallaxY = 0;
+  var targetParallaxX = 0;
+  var targetParallaxY = 0;
 
   // Blink
   var blinkTimer = 0;
@@ -130,9 +134,17 @@
       sprite.y = bob;
 
       if (isHovering) {
-        sprite.x += (mouseX - s.w / 2) * 0.012;
-        sprite.y += (mouseY - s.h / 2) * 0.006;
+        targetParallaxX = (mouseX - s.w / 2) * 0.04;
+        targetParallaxY = (mouseY - s.h / 2) * 0.02;
+      } else {
+        targetParallaxX = 0;
+        targetParallaxY = 0;
       }
+      // Smooth lerp so movement isn't instant
+      currentParallaxX += (targetParallaxX - currentParallaxX) * 0.05;
+      currentParallaxY += (targetParallaxY - currentParallaxY) * 0.05;
+      sprite.x += currentParallaxX;
+      sprite.y += currentParallaxY;
 
       // Position eye overlays to match sprite
       positionEyes();
