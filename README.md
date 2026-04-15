@@ -3,7 +3,7 @@
 
 A fan-made calculator tool for the game **問劍長生** (Sword Life / Wen Jian Chang Sheng). Helps players plan skill fragment conversions, calculate deficits, and optimize their superpower builds.
 
-**[Live Demo →](https://lsh1200.github.io/swordlifepowercalc/)**
+**[Live Demo →](https://bit.ly/wjcs-calc)**
 
 ## Features
 
