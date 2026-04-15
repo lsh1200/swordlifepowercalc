@@ -12,13 +12,7 @@ var SKILLS_PER_SHOP = 12;
 var shops = ["道蘊商店", "論劍商店", "諸天商會", "宗門寶庫", "百族寶箱"];
 var bounds = ["人界", "返虛", "煞海", "合體", "蠱族"];
 var types = ["火", "劍", "雷", "百族"];
-var colors = ["text-danger", "text-warning", "text-primary", "text-black"];
-
-function getSkillColor(sk) {
-	// 百族 (type 3): bound 4 = green, bound 2 = indigo (text-black)
-	if (sk.type === 3 && sk.bound === 4) return "text-tribe-green";
-	return getSkillColor(sk);
-}
+var colors = ["text-danger", "text-warning", "text-primary", "text-black", "text-tribe-green"];
 
 var levels = [
 	[
@@ -361,7 +355,7 @@ function refreshsourcepowerview() {
 
 		$('#sname' + i)[0].innerText = skill.name;
 		colors.forEach(function(c) { $('#sname' + i).removeClass(c); });
-		$('#sname' + i).addClass(getSkillColor(skill));
+		$('#sname' + i).addClass(colors[skill.type]);
 
 		$('#slevel' + i)[0].innerText = levelData.n;
 
@@ -412,7 +406,7 @@ function refreshtargetpowerview() {
 
 		$('#tname' + i)[0].innerText = skill.name;
 		colors.forEach(function(c) { $('#tname' + i).removeClass(c); });
-		$('#tname' + i).addClass(getSkillColor(skill));
+		$('#tname' + i).addClass(colors[skill.type]);
 
 		$('#tlevel' + i)[0].innerText = levelData.n;
 
@@ -484,7 +478,7 @@ function buildKeepSelector() {
 			html += '<div class="form-check text-start mb-1">';
 			html += '<input class="form-check-input" type="checkbox" id="kc' + sk.id + '" value="' + sk.id + '"' + checkedAttr + disabledAttr + '>';
 			var amtTag = isOwned ? ' <span class="keep-amount">(' + ownedAmounts.get(sk.id) + ')</span>' : '';
-			html += '<label class="form-check-label ' + getSkillColor(sk) + '"' + labelStyle + ' for="kc' + sk.id + '">' + sk.name + amtTag + '</label>';
+			html += '<label class="form-check-label ' + colors[sk.type] + '"' + labelStyle + ' for="kc' + sk.id + '">' + sk.name + amtTag + '</label>';
 			html += '</div>';
 		}
 		html += '</div>';
@@ -688,7 +682,7 @@ function buildShopSelector(fragmentMap, disabledSkillId, minusFn, plusFn, spanPr
 				amount = levels[skills[disabledSkillId].bound][source[currentSourceIdx].level].f - FRAGMENT_UNIT;
 			}
 			html += '<p id="src' + skillId + '" class="text-start mb-1">';
-			html += '<span class=' + getSkillColor(sortedSkills[j]) + '>' + sortedSkills[j].name + '</span>';
+			html += '<span class=' + colors[sortedSkills[j].type] + '>' + sortedSkills[j].name + '</span>';
 			html += ' <button onclick="' + minusFn + '(' + skillId + ')"' + disabledAttr + '>-</button>';
 			html += '<button onclick="' + plusFn + '(' + skillId + ')"' + disabledAttr + '>+</button>';
 			var editClick = '';
@@ -744,7 +738,7 @@ function sponchanged() {
 	var id = $('#sl1')[0].value;
 	var lv = $('#sll1')[0].value;
 	colors.forEach(function(c) { $('#sl1').removeClass(c); });
-	$('#sl1').addClass(getSkillColor(skills[id]));
+	$('#sl1').addClass(colors[skills[id].type]);
 
 	for (var i = 0; i < skills.length; i++) {
 		$('#sr' + i)[0].innerHTML = '';
@@ -815,7 +809,7 @@ function sfonplus(v) {
 function tponchanged(i) {
 	var skillId = Number($('#tl' + i)[0].value);
 	colors.forEach(function(c) { $('#tl' + i).removeClass(c); });
-	$('#tl' + i).addClass(getSkillColor(skills[skillId]));
+	$('#tl' + i).addClass(colors[skills[skillId].type]);
 	refreshtargetlevel(i, skillId);
 }
 
@@ -903,10 +897,10 @@ $('#ttbl > tbody > tr').on('click', function() {
 		for (var i = 0; i < SLOT_COUNT; i++) {
 			$('#tl' + i)[0].innerHTML = '';
 			colors.forEach(function(c) { $('#tl' + i).removeClass(c); });
-			$('#tl' + i).addClass(getSkillColor(skills[target[i].id]));
+			$('#tl' + i).addClass(colors[skills[target[i].id].type]);
 			skills.forEach(function(sk) {
 				var isSelected = (target[i].id === sk.id);
-				$('#tl' + i)[0].innerHTML += "<option class='" + getSkillColor(sk) + "' value='" + sk.id + "'" + (isSelected ? "selected" : "") + ">" + getSkillDisplayName(sk) + "</option>";
+				$('#tl' + i)[0].innerHTML += "<option class='" + colors[sk.type] + "' value='" + sk.id + "'" + (isSelected ? "selected" : "") + ">" + getSkillDisplayName(sk) + "</option>";
 			});
 			$('#tll' + i)[0].innerHTML = '';
 			var skill = skills[target[i].id];
@@ -946,10 +940,10 @@ $('#stbl > tbody > tr').on('click', function() {
 
 		$('#sl1')[0].innerHTML = '';
 		colors.forEach(function(c) { $('#sl1').removeClass(c); });
-		$('#sl1').addClass(getSkillColor(skills[source[currentSourceIdx].id]));
+		$('#sl1').addClass(colors[skills[source[currentSourceIdx].id].type]);
 		skills.forEach(function(sk) {
 			var isSelected = (source[currentSourceIdx].id === sk.id);
-			$('#sl1')[0].innerHTML += "<option class='" + getSkillColor(sk) + "' value='" + sk.id + "'" + (isSelected ? "selected" : "") + ">" + getSkillDisplayName(sk) + "</option>";
+			$('#sl1')[0].innerHTML += "<option class='" + colors[sk.type] + "' value='" + sk.id + "'" + (isSelected ? "selected" : "") + ">" + getSkillDisplayName(sk) + "</option>";
 		});
 
 		$('#sll1')[0].innerHTML = '';
