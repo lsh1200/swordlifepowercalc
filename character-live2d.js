@@ -194,11 +194,18 @@
           bd.lash.width = eyeRight - eyeLeft;
           bd.lash.height = lashScreenH;
 
-          // Skin fill: covers from eyeTop to lashY (area the lash has passed)
+          // Skin fill: oval shape covering from eyeTop to lashY
           if (skinGfx) {
-            skinGfx.beginFill(SKIN_COLOR, 1);
-            skinGfx.drawRect(eyeLeft, eyeTop, eyeRight - eyeLeft, lashY - eyeTop - lashScreenH);
-            skinGfx.endFill();
+            var fillH = lashY - eyeTop - lashScreenH;
+            if (fillH > 1) {
+              var cx = (eyeLeft + eyeRight) / 2;
+              var cy = eyeTop + fillH / 2;
+              var rx = (eyeRight - eyeLeft) / 2;
+              var ry = fillH / 2;
+              skinGfx.beginFill(SKIN_COLOR, 1);
+              skinGfx.drawEllipse(cx, cy, rx, ry);
+              skinGfx.endFill();
+            }
           }
         } else {
           bd.lash.visible = false;
