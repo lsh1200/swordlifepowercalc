@@ -278,110 +278,102 @@ function updatedatadone() {
 }
 
 // ===== Compact Code Encoding =====
-// Packs state into a short alphanumeric code
-// Format: source slots (id,level,src count,src pairs) + frags + fragp + fragb + target + keep
+// Bit-packed encoding: skill_id=6b, level=4b, amount_unit=5b, count=3-4b
 function encodeState() {
-	var nums = [];
+	var bits = [];
+	function w(val, n) { for (var i = n - 1; i >= 0; i--) bits.push((val >> i) & 1); }
+
 	// source: 6 slots
 	for (var i = 0; i < SLOT_COUNT; i++) {
 		var s = source[i];
-		nums.push(s.id, s.level, s.src.length);
+		w(s.id, 6); w(s.level, 4); w(s.src.length, 3);
 		for (var j = 0; j < s.src.length; j++) {
-			nums.push(s.src[j].id, s.src[j].amount / FRAGMENT_UNIT); // store as units not raw
+			w(s.src[j].id, 6); w(s.src[j].amount / FRAGMENT_UNIT, 5);
 		}
 	}
 	// frags
-	nums.push(frags.length);
+	w(frags.length, 4);
 	for (var i = 0; i < frags.length; i++) {
-		nums.push(frags[i].id, frags[i].amount / FRAGMENT_UNIT);
+		w(frags[i].id, 6); w(frags[i].amount / FRAGMENT_UNIT, 5);
 	}
-	// fragp, fragb (as raw)
-	nums.push(fragp, fragb);
+	// fragp, fragb
+	w(fragp, 14); w(fragb, 15);
 	// target: 6 slots
 	for (var i = 0; i < SLOT_COUNT; i++) {
-		nums.push(target[i].id, target[i].level);
+		w(target[i].id, 6); w(target[i].level, 4);
 	}
 	// keep
-	nums.push(keep.length);
-	for (var i = 0; i < keep.length; i++) nums.push(keep[i]);
+	w(keep.length, 3);
+	for (var i = 0; i < keep.length; i++) w(keep[i], 6);
 
-	// Pack numbers into bytes using variable-length encoding
+	// Pad to byte boundary
+	while (bits.length % 8) bits.push(0);
+
+	// Convert bits to bytes
 	var bytes = [];
-	for (var i = 0; i < nums.length; i++) {
-		var n = nums[i];
-		if (n < 128) {
-			bytes.push(n);
-		} else if (n < 16384) {
-			bytes.push(128 | (n >> 7), n & 127);
-		} else {
-			bytes.push(128 | (n >> 14), 128 | ((n >> 7) & 127), n & 127);
-		}
+	for (var i = 0; i < bits.length; i += 8) {
+		var b = 0;
+		for (var j = 0; j < 8; j++) b = (b << 1) | bits[i + j];
+		bytes.push(b);
 	}
 
-	// Base64url encode
-	var bin = '';
-	for (var i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
-	var code = btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+	// Base62 encode (0-9, A-Z, a-z) for shorter string
+	var chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
+	var num = 0n;
+	for (var i = 0; i < bytes.length; i++) num = num * 256n + BigInt(bytes[i]);
+	var code = '';
+	while (num > 0n) { code = chars[Number(num % 62n)] + code; num = num / 62n; }
 
-	// Format with dashes for readability: WJCS-xxxx-xxxx-...
-	var parts = ['WJCS'];
-	for (var i = 0; i < code.length; i += 4) {
-		parts.push(code.substring(i, i + 4));
-	}
-	return parts.join('-');
+	return 'WJCS-' + code;
 }
 
 function decodeState(code) {
 	try {
-		// Strip prefix and dashes
 		var parts = code.split('-');
 		if (parts[0] !== 'WJCS') return null;
-		var b64 = parts.slice(1).join('').replace(/-/g, '+').replace(/_/g, '/');
-		while (b64.length % 4) b64 += '=';
-		var bin = atob(b64);
-		var bytes = [];
-		for (var i = 0; i < bin.length; i++) bytes.push(bin.charCodeAt(i));
+		var raw = parts.slice(1).join('');
 
-		// Decode variable-length numbers
-		var nums = [];
-		var idx = 0;
-		while (idx < bytes.length) {
-			var n = 0;
-			while (idx < bytes.length && bytes[idx] >= 128) {
-				n = (n << 7) | (bytes[idx] & 127);
-				idx++;
-			}
-			if (idx < bytes.length) {
-				n = (n << 7) | bytes[idx];
-				idx++;
-			}
-			nums.push(n);
+		// Base62 decode
+		var chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
+		var num = 0n;
+		for (var i = 0; i < raw.length; i++) num = num * 62n + BigInt(chars.indexOf(raw[i]));
+
+		// Figure out byte count from the BigInt
+		var hex = num.toString(16);
+		if (hex.length % 2) hex = '0' + hex;
+		var bytes = [];
+		for (var i = 0; i < hex.length; i += 2) bytes.push(parseInt(hex.substring(i, i + 2), 16));
+
+		// Convert bytes to bits
+		var bits = [];
+		for (var i = 0; i < bytes.length; i++) {
+			for (var j = 7; j >= 0; j--) bits.push((bytes[i] >> j) & 1);
 		}
 
-		// Unpack
-		var p = 0;
+		var pos = 0;
+		function r(n) {
+			var v = 0;
+			for (var i = 0; i < n; i++) v = (v << 1) | (bits[pos++] || 0);
+			return v;
+		}
+
+		// source
 		var src = [];
 		for (var i = 0; i < SLOT_COUNT; i++) {
-			var id = nums[p++], lv = nums[p++], sc = nums[p++];
+			var id = r(6), lv = r(4), sc = r(3);
 			var srcs = [];
-			for (var j = 0; j < sc; j++) {
-				srcs.push({id: nums[p++], amount: nums[p++] * FRAGMENT_UNIT});
-			}
+			for (var j = 0; j < sc; j++) srcs.push({id: r(6), amount: r(5) * FRAGMENT_UNIT});
 			src.push({id: id, level: lv, src: srcs});
 		}
-		var fl = nums[p++];
+		var fl = r(4);
 		var fr = [];
-		for (var i = 0; i < fl; i++) {
-			fr.push({id: nums[p++], amount: nums[p++] * FRAGMENT_UNIT});
-		}
-		var fp = nums[p++], fb = nums[p++];
+		for (var i = 0; i < fl; i++) fr.push({id: r(6), amount: r(5) * FRAGMENT_UNIT});
+		var fp = r(14), fb = r(15);
 		var tgt = [];
-		for (var i = 0; i < SLOT_COUNT; i++) {
-			tgt.push({id: nums[p++], level: nums[p++]});
-		}
-		var kl = nums[p++];
+		for (var i = 0; i < SLOT_COUNT; i++) tgt.push({id: r(6), level: r(4)});
+		var kl = r(3);
 		var kp = [];
-		for (var i = 0; i < kl; i++) kp.push(nums[p++]);
+		for (var i = 0; i < kl; i++) kp.push(r(6));
 
 		return {source: src, frags: fr, fragp: fp, fragb: fb, target: tgt, keep: kp};
 	} catch (e) {
