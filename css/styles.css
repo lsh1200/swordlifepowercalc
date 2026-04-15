@@ -648,6 +648,12 @@ h1, h2, h3, h4, h5, h6 {
   opacity: 1;
 }
 
+/* Code box placeholder */
+#codeBox::placeholder {
+  color: var(--text-tertiary);
+  opacity: 1;
+}
+
 /* Offcanvas backdrop */
 .offcanvas-backdrop.show {
   background-color: rgba(0, 0, 0, 0.6);

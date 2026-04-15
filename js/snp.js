@@ -650,7 +650,25 @@ function computesuperpower() {
 			}
 		});
 	});
-	function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+	var usedActions = [];
+	function pick(arr) {
+		// Try to pick a line whose （action） hasn't been used yet
+		var shuffled = arr.slice().sort(function() { return Math.random() - 0.5; });
+		for (var i = 0; i < shuffled.length; i++) {
+			var m = shuffled[i].match(/（([^）]+)）/g);
+			var actions = m ? m.map(function(s) { return s; }) : [];
+			var dup = false;
+			for (var j = 0; j < actions.length; j++) {
+				if (usedActions.indexOf(actions[j]) >= 0) { dup = true; break; }
+			}
+			if (!dup) {
+				for (var j = 0; j < actions.length; j++) usedActions.push(actions[j]);
+				return shuffled[i];
+			}
+		}
+		// Fallback: all have duplicates, just pick random
+		return shuffled[0];
+	}
 	var cp = conversionParts.join("，");
 	var cc = conversionCount;
 	var conversionHtml = '';
@@ -666,7 +684,7 @@ function computesuperpower() {
 		conversionHtml = pick([
 			"咦？不、不用轉換呢……你的殘卷剛剛好……（鬆了口氣）",
 			"欸……居然不用轉換？你……你準備得好齊全……（小聲嘟囔）",
-			"我我我看了好幾遍……真的不用轉換呢……（鬆了口氣）",
+			"我我我看了好幾遍……真的不用轉換呢……（拍拍胸口）",
 		]) + "<br />";
 	}
 
@@ -721,13 +739,13 @@ function computesuperpower() {
 			"嗚……差了" + ms + "……（瑟瑟發抖）但、但是沒關係的……剩下的一定能湊齊的……",
 			"我我我算了好幾遍……確實還差" + ms + "……（攥緊衣角）你、你別急，慢慢來嘛……我又不會跑掉……",
 			"還差" + ms + "呢……（低頭）沒、沒事的……這點缺口很快就能補上的，你、你一定可以的！",
-			"唔……" + ms + "還不夠……（牙關打顫）不過……不過你已經準備得很好了！真的！我我我沒有在安慰你……",
+			"唔……" + ms + "還不夠……（咬唇）不過……不過你已經準備得很好了！真的！我我我沒有在安慰你……",
 		]) + "<br />";
 	} else {
 		deficitHtml += pick([
 			"全、全部夠了！……我我我沒有很開心啦！只是……剛好鬆了口氣而已……",
-			"咦……居然全部夠用了……我、我才沒有替你高興呢……（小聲）",
-			"剛剛好全部夠了！你、你太厲害了吧……（小聲）我我我只是在陳述事實而已……",
+			"咦……居然全部夠用了……我、我才沒有替你高興呢……（撥頭髮）",
+			"剛剛好全部夠了！你、你太厲害了吧……（揉眼睛）我我我只是在陳述事實而已……",
 			"全……全部夠了呢……（鬆了口氣）看吧，我就說你可以的……才、才不是因為擔心你才一直在算……",
 		]) + "<br />";
 	}
