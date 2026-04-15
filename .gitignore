@@ -47,6 +47,19 @@ ss*.mjs
 screenshot-panels.mjs
 screenshot*.png
 
+# Unused/temp image artifacts
+eyelid-*.png
+lash-*.png
+*-preview*.png
+*-debug*.png
+oval-debug.png
+hand-trace-final.png
+reorg-verify.png
+design-system/
+
+# Untracked font files (only assets/fonts/ is tracked)
+fonts/
+
 # OS
 .DS_Store
 Thumbs.db
