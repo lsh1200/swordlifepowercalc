@@ -1311,7 +1311,10 @@ td[style*="cursor: pointer"]:hover {
   transform: translateX(-50%);
   width: 56px;
   height: 56px;
+  min-width: 56px;
+  max-width: 56px;
   border-radius: 50%;
+  overflow: visible;
   background: radial-gradient(circle, rgba(232,91,84,0.25) 0%, transparent 70%);
   border: 2px solid rgba(232,91,84,0.5);
   cursor: pointer;
@@ -1324,6 +1327,10 @@ td[style*="cursor: pointer"]:hover {
 }
 
 .gift-tap-label {
+  position: absolute;
+  bottom: -20px;
+  left: 50%;
+  transform: translateX(-50%);
   color: var(--accent-primary);
   font-size: 9px;
   font-weight: 600;
