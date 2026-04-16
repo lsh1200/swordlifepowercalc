@@ -129,7 +129,7 @@
     if (sprite) {
       var tw = sprite.texture.width;
       var th = sprite.texture.height;
-      var baseScale = Math.max(s.w / tw, s.h / th);
+      var baseScale = isMobile ? (s.w / tw) : Math.max(s.w / tw, s.h / th);
 
       var breathY = 1 + Math.sin(time * 2.2) * 0.015;
       var breathX = 1 + Math.sin(time * 2.2) * 0.005;
