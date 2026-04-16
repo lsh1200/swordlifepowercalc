@@ -1306,42 +1306,78 @@ td[style*="cursor: pointer"]:hover {
 /* ── Gift Tap Target ─────────────────────────────────────────── */
 .gift-tap {
   position: absolute;
-  bottom: 10%;
+  bottom: 18%;
   left: 50%;
   transform: translateX(-50%);
-  width: 56px;
-  height: 56px;
-  min-width: 56px;
-  max-width: 56px;
+  width: 52px;
+  height: 52px;
+  min-width: 52px;
+  max-width: 52px;
   border-radius: 50%;
   overflow: visible;
-  background: radial-gradient(circle, rgba(232,91,84,0.25) 0%, transparent 70%);
-  border: 2px solid rgba(232,91,84,0.5);
+  background: radial-gradient(circle,
+    rgba(255,215,140,0.15) 0%,
+    rgba(232,91,84,0.08) 50%,
+    transparent 70%
+  );
+  border: 1px solid rgba(255,215,140,0.4);
+  box-shadow:
+    0 0 12px rgba(255,215,140,0.2),
+    0 0 24px rgba(232,91,84,0.1),
+    inset 0 0 8px rgba(255,215,140,0.1);
   cursor: pointer;
   z-index: 10;
-  animation: giftPulse 2.5s ease-in-out infinite;
+  animation: giftPulse 3s ease-in-out infinite;
   display: flex;
   align-items: center;
   justify-content: center;
   touch-action: manipulation;
 }
 
+.gift-tap::before {
+  content: '';
+  position: absolute;
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+  border: 1px solid rgba(255,215,140,0.12);
+  animation: giftRing 3s ease-in-out infinite;
+  pointer-events: none;
+}
+
 .gift-tap-label {
   position: absolute;
-  bottom: -20px;
+  bottom: -22px;
   left: 50%;
   transform: translateX(-50%);
-  color: var(--accent-primary);
-  font-size: 9px;
-  font-weight: 600;
+  color: rgba(255,215,140,0.8);
+  font-family: var(--font-xianxia);
+  font-size: 11px;
+  font-weight: normal;
+  letter-spacing: 0.15em;
   white-space: nowrap;
-  text-shadow: 0 1px 4px rgba(0,0,0,0.9);
+  text-shadow: 0 0 8px rgba(255,215,140,0.3), 0 1px 4px rgba(0,0,0,0.9);
   pointer-events: none;
 }
 
 @keyframes giftPulse {
-  0%, 100% { box-shadow: 0 0 8px var(--accent-glow); }
-  50% { box-shadow: 0 0 20px var(--accent-glow); }
+  0%, 100% {
+    box-shadow:
+      0 0 8px rgba(255,215,140,0.15),
+      0 0 16px rgba(232,91,84,0.05),
+      inset 0 0 6px rgba(255,215,140,0.08);
+  }
+  50% {
+    box-shadow:
+      0 0 16px rgba(255,215,140,0.3),
+      0 0 32px rgba(232,91,84,0.12),
+      inset 0 0 12px rgba(255,215,140,0.15);
+  }
+}
+
+@keyframes giftRing {
+  0%, 100% { opacity: 0.3; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(1.08); }
 }
 
 /* Hide gift tap on desktop */
