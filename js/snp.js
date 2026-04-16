@@ -209,7 +209,7 @@ function isInt(n) { return typeof n === 'number' && Number.isFinite(n) && n === 
 function validateUrlData(data) {
 	if (!data || typeof data !== 'object') return false;
 	if (!Array.isArray(data.source) || data.source.length !== SLOT_COUNT) return false;
-	if (!Array.isArray(data.frags) || data.frags.length > 15) return false;
+	if (!Array.isArray(data.frags) || data.frags.length > 63) return false;
 	if (!isInt(data.fragp) || data.fragp < 0 || data.fragp > 16383) return false;
 	if (!isInt(data.fragb) || data.fragb < 0 || data.fragb > 32767) return false;
 	if (!Array.isArray(data.target) || data.target.length !== SLOT_COUNT) return false;
@@ -219,7 +219,7 @@ function validateUrlData(data) {
 		if (!s || !isInt(s.id) || s.id < 0 || s.id >= skills.length) return false;
 		var sk = skills[s.id];
 		if (!isInt(s.level) || s.level < 1 || s.level >= levels[sk.bound].length) return false;
-		if (!Array.isArray(s.src) || s.src.length > 7) return false;
+		if (!Array.isArray(s.src) || s.src.length > 63) return false;
 		for (var j = 0; j < s.src.length; j++) {
 			var frag = s.src[j];
 			if (!frag || !isInt(frag.id) || frag.id < 0 || frag.id >= skills.length) return false;
@@ -241,7 +241,7 @@ function validateUrlData(data) {
 	}
 
 	if (data.keep !== undefined) {
-		if (!Array.isArray(data.keep) || data.keep.length > 6) return false;
+		if (!Array.isArray(data.keep) || data.keep.length > 15) return false;
 		for (var i = 0; i < data.keep.length; i++) {
 			if (!isInt(data.keep[i]) || data.keep[i] < 0 || data.keep[i] >= skills.length) return false;
 		}
@@ -285,8 +285,44 @@ function updatedatadone() {
 }
 
 // ===== Compact Code Encoding =====
-// Bit-packed + base62: ~92 chars for full state with all fragments
+// v0: original bit-packed + base62 (narrow fields, kept for backward compat)
+// v1: wider bit fields, prefixed with "1:" to distinguish from v0
+//   v0 limits that caused silent overflow:
+//     srcCount 3b(max 7), amount/40 5b(max 31=1240), fragCount 4b(max 15), keepCount 3b(max 7)
+//   v1 widths:
+//     srcCount 6b(max 63), amount/40 8b(max 255=10200), fragCount 6b(max 63), keepCount 4b(max 15)
 var B62 = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
+
+function bitsToBase62(bits) {
+	while (bits.length % 8) bits.push(0);
+	var bytes = [];
+	for (var i = 0; i < bits.length; i += 8) {
+		var b = 0; for (var j = 0; j < 8; j++) b = (b << 1) | bits[i + j]; bytes.push(b);
+	}
+	var num = 0n;
+	for (var i = 0; i < bytes.length; i++) num = num * 256n + BigInt(bytes[i]);
+	var code = '';
+	while (num > 0n) { code = B62[Number(num % 62n)] + code; num = num / 62n; }
+	return code;
+}
+
+function base62ToBits(code) {
+	var num = 0n;
+	for (var i = 0; i < code.length; i++) {
+		var idx = B62.indexOf(code[i]);
+		if (idx < 0) return null;
+		num = num * 62n + BigInt(idx);
+	}
+	var hex = num.toString(16);
+	if (hex.length % 2) hex = '0' + hex;
+	var bytes = [];
+	for (var i = 0; i < hex.length; i += 2) bytes.push(parseInt(hex.substring(i, i + 2), 16));
+	var bits = [];
+	for (var i = 0; i < bytes.length; i++) {
+		for (var j = 7; j >= 0; j--) bits.push((bytes[i] >> j) & 1);
+	}
+	return bits;
+}
 
 function encodeState() {
 	var bits = [];
@@ -295,71 +331,79 @@ function encodeState() {
 	for (var i = 0; i < SLOT_COUNT; i++) {
 		var s = source[i];
 		var nz = s.src.filter(function(f) { return f.amount > 0; });
-		w(s.id, 6); w(s.level, 4); w(nz.length, 3);
-		for (var j = 0; j < nz.length; j++) { w(nz[j].id, 6); w(nz[j].amount / FRAGMENT_UNIT, 5); }
+		w(s.id, 6); w(s.level, 4); w(nz.length, 6);
+		for (var j = 0; j < nz.length; j++) { w(nz[j].id, 6); w(nz[j].amount / FRAGMENT_UNIT, 8); }
 	}
 	var nzf = frags.filter(function(f) { return f.amount > 0; });
-	w(nzf.length, 4);
-	for (var i = 0; i < nzf.length; i++) { w(nzf[i].id, 6); w(nzf[i].amount / FRAGMENT_UNIT, 5); }
+	w(nzf.length, 6);
+	for (var i = 0; i < nzf.length; i++) { w(nzf[i].id, 6); w(nzf[i].amount / FRAGMENT_UNIT, 8); }
 	w(fragp, 14); w(fragb, 15);
 	for (var i = 0; i < SLOT_COUNT; i++) { w(target[i].id, 6); w(target[i].level, 4); }
-	w(keep.length, 3);
+	w(keep.length, 4);
 	for (var i = 0; i < keep.length; i++) w(keep[i], 6);
 
-	while (bits.length % 8) bits.push(0);
-	var bytes = [];
-	for (var i = 0; i < bits.length; i += 8) {
-		var b = 0; for (var j = 0; j < 8; j++) b = (b << 1) | bits[i + j]; bytes.push(b);
-	}
+	return '1:' + bitsToBase62(bits);
+}
 
-	var num = 0n;
-	for (var i = 0; i < bytes.length; i++) num = num * 256n + BigInt(bytes[i]);
-	var code = '';
-	while (num > 0n) { code = B62[Number(num % 62n)] + code; num = num / 62n; }
-	return code;
+function decodeStateV0(code) {
+	var bits = base62ToBits(code);
+	if (!bits) return null;
+	var pos = 0;
+	function r(n) { var v = 0; for (var i = 0; i < n; i++) v = (v << 1) | (bits[pos++] || 0); return v; }
+
+	var src = [];
+	for (var i = 0; i < SLOT_COUNT; i++) {
+		var id = r(6), lv = r(4), sc = r(3);
+		var srcs = [];
+		for (var j = 0; j < sc; j++) srcs.push({id: r(6), amount: r(5) * FRAGMENT_UNIT});
+		src.push({id: id, level: lv, src: srcs});
+	}
+	var fl = r(4);
+	var fr = [];
+	for (var i = 0; i < fl; i++) fr.push({id: r(6), amount: r(5) * FRAGMENT_UNIT});
+	var fp = r(14), fb = r(15);
+	var tgt = [];
+	for (var i = 0; i < SLOT_COUNT; i++) tgt.push({id: r(6), level: r(4)});
+	var kl = r(3);
+	var kp = [];
+	for (var i = 0; i < kl; i++) kp.push(r(6));
+
+	return {source: src, frags: fr, fragp: fp, fragb: fb, target: tgt, keep: kp};
+}
+
+function decodeStateV1(code) {
+	var bits = base62ToBits(code);
+	if (!bits) return null;
+	var pos = 0;
+	function r(n) { var v = 0; for (var i = 0; i < n; i++) v = (v << 1) | (bits[pos++] || 0); return v; }
+
+	var src = [];
+	for (var i = 0; i < SLOT_COUNT; i++) {
+		var id = r(6), lv = r(4), sc = r(6);
+		var srcs = [];
+		for (var j = 0; j < sc; j++) srcs.push({id: r(6), amount: r(8) * FRAGMENT_UNIT});
+		src.push({id: id, level: lv, src: srcs});
+	}
+	var fl = r(6);
+	var fr = [];
+	for (var i = 0; i < fl; i++) fr.push({id: r(6), amount: r(8) * FRAGMENT_UNIT});
+	var fp = r(14), fb = r(15);
+	var tgt = [];
+	for (var i = 0; i < SLOT_COUNT; i++) tgt.push({id: r(6), level: r(4)});
+	var kl = r(4);
+	var kp = [];
+	for (var i = 0; i < kl; i++) kp.push(r(6));
+
+	return {source: src, frags: fr, fragp: fp, fragb: fb, target: tgt, keep: kp};
 }
 
 function decodeState(code) {
 	try {
 		code = code.trim();
-		var num = 0n;
-		for (var i = 0; i < code.length; i++) {
-			var idx = B62.indexOf(code[i]);
-			if (idx < 0) return null;
-			num = num * 62n + BigInt(idx);
+		if (code.indexOf('1:') === 0) {
+			return decodeStateV1(code.substring(2));
 		}
-
-		var hex = num.toString(16);
-		if (hex.length % 2) hex = '0' + hex;
-		var bytes = [];
-		for (var i = 0; i < hex.length; i += 2) bytes.push(parseInt(hex.substring(i, i + 2), 16));
-
-		var bits = [];
-		for (var i = 0; i < bytes.length; i++) {
-			for (var j = 7; j >= 0; j--) bits.push((bytes[i] >> j) & 1);
-		}
-
-		var pos = 0;
-		function r(n) { var v = 0; for (var i = 0; i < n; i++) v = (v << 1) | (bits[pos++] || 0); return v; }
-
-		var src = [];
-		for (var i = 0; i < SLOT_COUNT; i++) {
-			var id = r(6), lv = r(4), sc = r(3);
-			var srcs = [];
-			for (var j = 0; j < sc; j++) srcs.push({id: r(6), amount: r(5) * FRAGMENT_UNIT});
-			src.push({id: id, level: lv, src: srcs});
-		}
-		var fl = r(4);
-		var fr = [];
-		for (var i = 0; i < fl; i++) fr.push({id: r(6), amount: r(5) * FRAGMENT_UNIT});
-		var fp = r(14), fb = r(15);
-		var tgt = [];
-		for (var i = 0; i < SLOT_COUNT; i++) tgt.push({id: r(6), level: r(4)});
-		var kl = r(3);
-		var kp = [];
-		for (var i = 0; i < kl; i++) kp.push(r(6));
-
-		return {source: src, frags: fr, fragp: fp, fragb: fb, target: tgt, keep: kp};
+		return decodeStateV0(code);
 	} catch (e) {
 		return null;
 	}
@@ -375,7 +419,7 @@ function loadCode() {
 	var box = document.getElementById('codeBox');
 	var code = box.value.trim();
 	if (!code) { showShareToast('請先貼上配置碼！'); box.focus(); return; }
-	if (code.length > 200) { showShareToast('配置碼太長！'); return; }
+	if (code.length > 500) { showShareToast('配置碼太長！'); return; }
 	var data = decodeState(code);
 	if (data && validateUrlData(data)) {
 		source = data.source;

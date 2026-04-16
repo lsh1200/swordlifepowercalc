@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
 	shops, bounds, types, levels, skills,
 	computesuperpower, computeSourceTotals, computeTargetTotals, validateUrlData
-} from './snp.core.js';
+} from '../js/snp.core.js';
 
 // ============================================================
 // Default data set (matches snp.js hardcoded defaults — user's v1.3 data)
