@@ -1252,15 +1252,9 @@ td[style*="cursor: pointer"]:hover {
     width: auto !important;
   }
 
-  /* Allow horizontal scroll as safety net */
+  /* No horizontal scroll — table fits naturally */
   .table-card {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  /* Tighter min-width for source table */
-  #stbl {
-    min-width: 320px !important;
+    overflow-x: hidden;
   }
 
   /* Tips section: compact on mobile */
