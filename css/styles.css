@@ -1211,6 +1211,20 @@ td[style*="cursor: pointer"]:hover {
     padding: var(--space-4) 0 var(--space-3);
   }
 
+  /* Gap between stacked table columns on mobile */
+  .row > .col-12.col-md-6 + .col-12.col-md-6 {
+    margin-top: var(--space-5);
+  }
+
+  /* Bug report popup: ensure it sits above the table card below */
+  #bug-report {
+    z-index: 10;
+  }
+
+  .bug-popup {
+    z-index: 11;
+  }
+
   #stbl, #ttbl {
     font-size: 11px;
   }
