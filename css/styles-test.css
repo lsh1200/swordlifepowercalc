@@ -1306,7 +1306,7 @@ td[style*="cursor: pointer"]:hover {
 /* ── Gift Tap Target ─────────────────────────────────────────── */
 .gift-tap {
   position: absolute;
-  bottom: 18%;
+  bottom: 16.5%;
   left: 50%;
   transform: translateX(-50%);
   width: 52px;
