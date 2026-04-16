@@ -1216,13 +1216,10 @@ td[style*="cursor: pointer"]:hover {
     margin-top: var(--space-5);
   }
 
-  /* Bug report popup: ensure it sits above the table card below */
-  #bug-report {
+  /* Bug report popup: entire tips section must sit above table cards below */
+  #tips {
+    position: relative;
     z-index: 10;
-  }
-
-  .bug-popup {
-    z-index: 11;
   }
 
   #stbl, #ttbl {
