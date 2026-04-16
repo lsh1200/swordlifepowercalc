@@ -45,20 +45,46 @@
 
     <!-- ── Tips Section ────────────────────────────────────── -->
     <div class="row">
-      <div class="col col-12">
+      <div class="col-12">
         <div id="tips" class="p-3 mt-2">
-          <h5 style="color:var(--accent-primary)">注意事項</h5>
-          <h6>1.請看著神通還原的殘卷內容細心選擇，數量正確再修改</h6>
-          <h6>2.試算結果未必是最佳，僅協助玩家找出關鍵轉換神通</h6>
-          <h6>3.部分資料參考大陸來源，試算結果僅供參考</h6>
-          <h6>4.輸入防呆有待完善，可能有bug請慎入</h6>
-          <h6>5.配置自動保存，關閉瀏覽器也不會丟失</h6>
-          <h6 style="margin-top:0.5rem">
-            <label for="codeBox" style="color:var(--text-secondary);font-size:12px">配置碼：</label><br>
-            <input id="codeBox" type="text" class="form-control form-control-sm" placeholder="點擊「生成」取得配置碼，或貼上朋友的配置碼後點擊「匯入」" onfocus="this.select()" style="font-family:var(--font-mono);font-size:12px;margin:4px 0"><br>
-            <button class="btn btn-outline-share btn-sm" onclick="generateCode()">生成配置碼</button>
-            <button class="btn btn-outline-share btn-sm" onclick="loadCode()">匯入配置碼</button>
-          </h6>
+          <div class="d-flex flex-column flex-md-row gap-3">
+            <div class="flex-grow-1">
+              <h5 style="color:var(--accent-primary)">注意事項</h5>
+              <h6>1.請看著神通還原的殘卷內容細心選擇，數量正確再修改</h6>
+              <h6>2.試算結果未必是最佳，僅協助玩家找出關鍵轉換神通</h6>
+              <h6>3.部分資料參考大陸來源，試算結果僅供參考</h6>
+              <h6>4.輸入防呆有待完善，可能有bug請慎入</h6>
+              <h6 style="position:relative">5.配置自動保存，關閉瀏覽器也不會丟失
+                <span class="help-icon" onclick="this.nextElementSibling.classList.toggle('show')">?</span>
+                <span class="help-popup">
+                  <strong>如何在 Chrome 查看儲存資料：</strong><br>
+                  1. 按 <kbd>F12</kbd> 開啟開發者工具<br>
+                  2. 點上方的 <kbd>Application</kbd> 分頁<br>
+                  3. 左側欄展開 <kbd>Local Storage</kbd><br>
+                  4. 點擊網站的 URL<br>
+                  5. 找到 <kbd>snp_save</kbd> 即為儲存的配置資料
+                </span>
+              </h6>
+              <h6 style="margin-top:0.5rem">
+                <label for="codeBox" style="color:var(--text-secondary);font-size:12px">配置碼：</label><br>
+                <input id="codeBox" type="text" class="form-control form-control-sm" placeholder="點擊「生成」取得配置碼，或貼上朋友的配置碼後點擊「匯入」" onfocus="this.select()" style="font-family:var(--font-mono);font-size:12px;margin:4px 0"><br>
+                <button class="btn btn-outline-share btn-sm" onclick="generateCode()">生成配置碼</button>
+                <button class="btn btn-outline-share btn-sm" onclick="loadCode()">匯入配置碼</button>
+              </h6>
+            </div>
+            <div id="bug-report" class="flex-shrink-0" style="position:relative">
+              <span class="bug-report-toggle" onclick="this.nextElementSibling.classList.toggle('show')">Bug 回報</span>
+              <span class="help-popup bug-popup">
+                <strong>發現問題或有建議？</strong><br>
+                歡迎到 GitHub 提交 Issue：<br>
+                <a href="https://github.com/lsh1200/swordlifepowercalc/issues" target="_blank" rel="noopener" class="btn btn-outline-share btn-sm" style="margin-top:0.5rem">前往回報 Bug</a>
+                <hr style="border-color:var(--surface-glass-border);margin:0.5rem 0">
+                <strong style="color:var(--accent-primary)">最近修復</strong><br>
+                - 配置碼：修復來源碎片超過7個時編碼溢出導致匯入無效的問題<br>
+                - 如果你之前的配置碼無法匯入，請重新生成一次
+              </span>
+            </div>
+          </div>
         </div>
         <div id="shareToast" class="share-toast" style="display:none"></div>
       </div>
@@ -277,5 +303,6 @@
   <script src="https://cdn.jsdelivr.net/npm/pixi.js@7.3.3/dist/pixi.min.js"></script>
   <script src="js/snp.js?v=67"></script>
   <script src="js/character-live2d.js?v=67"></script>
+  <script>document.addEventListener('click',function(e){if(!e.target.classList.contains('help-icon')&&!e.target.classList.contains('bug-report-toggle')){document.querySelectorAll('.help-popup.show').forEach(function(p){p.classList.remove('show')})}});</script>
 </body>
 </html>

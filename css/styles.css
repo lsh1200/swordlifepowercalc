@@ -279,6 +279,86 @@ h1, h2, h3, h4, h5, h6 {
   margin-bottom: 0.25rem;
 }
 
+/* ── Bug Report Toggle ────────────────────────────────────────── */
+.bug-report-toggle {
+  color: var(--accent-primary);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  border-bottom: 1px dashed var(--accent-primary);
+  user-select: none;
+}
+
+.bug-report-toggle:hover {
+  opacity: 0.8;
+}
+
+.bug-popup {
+  bottom: auto !important;
+  top: 100%;
+  margin-top: 6px;
+  margin-bottom: 0;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.6) !important;
+  right: 0;
+  min-width: 300px;
+}
+
+/* ── Help Icon / Popup ───────────────────────────────────────── */
+.help-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 1px solid var(--accent-primary);
+  color: var(--accent-primary);
+  font-size: 7px;
+  font-weight: 700;
+  cursor: pointer;
+  margin-left: 4px;
+  vertical-align: middle;
+  transition: background 0.2s, color 0.2s;
+  user-select: none;
+}
+
+.help-icon:hover {
+  background: var(--accent-primary);
+  color: var(--bg-primary);
+}
+
+.help-popup {
+  display: none;
+  position: absolute;
+  z-index: 100;
+  background: rgba(30, 30, 34, 0.95);
+  border: 1px solid var(--surface-glass-border);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-radius: 8px;
+  padding: 12px 16px;
+  bottom: 100%;
+  margin-bottom: 6px;
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--text-secondary);
+  max-width: 340px;
+  box-shadow: 0 -4px 24px rgba(0,0,0,0.6);
+}
+
+.help-popup.show {
+  display: block;
+}
+
+.help-popup kbd {
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 3px;
+  padding: 1px 5px;
+  font-size: 12px;
+  font-family: var(--font-mono);
+}
+
 /* ── Tables ───────────────────────────────────────────────────── */
 #stbl,
 #ttbl {
