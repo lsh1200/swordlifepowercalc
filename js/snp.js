@@ -844,6 +844,23 @@ function computesuperpower() {
 	} else {
 		$('#tsum')[0].innerHTML = conversionHtml + "<br />" + deficitHtml + "<br />" + remainderHtml;
 	}
+
+	// Gift reveal on mobile
+	if (window.innerWidth < 768) {
+		var reportRow = document.querySelector('.report-row');
+		var giftTap = document.getElementById('giftTap');
+		var tsumEl = document.getElementById('tsum');
+		if (reportRow && giftTap && tsumEl) {
+			reportRow.classList.add('gift-wrapped');
+			tsumEl.classList.remove('revealed');
+			giftTap.style.display = 'flex';
+			giftTap.onclick = function() {
+				giftTap.style.display = 'none';
+				reportRow.classList.remove('gift-wrapped');
+				tsumEl.classList.add('revealed');
+			};
+		}
+	}
 }
 
 // ===== Click-to-Edit Badge =====
