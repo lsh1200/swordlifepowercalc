@@ -542,9 +542,11 @@ h1, h2, h3, h4, h5, h6 {
 
   .character-panel {
     flex: 0 0 auto;
-    width: 280px;
-    height: 400px;
-    min-height: 400px;
+    width: 100%;
+    max-width: 320px;
+    height: auto;
+    aspect-ratio: 591 / 848;
+    min-height: 0;
     margin-top: 0;
     -webkit-mask-image: none;
     mask-image: none;
@@ -1298,34 +1300,36 @@ td[style*="cursor: pointer"]:hover {
 /* ── Gift Tap Target ─────────────────────────────────────────── */
 .gift-tap {
   position: absolute;
-  bottom: 8%;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 64px;
-  height: 64px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(232,91,84,0.3) 0%, transparent 70%);
-  border: 2px solid rgba(232,91,84,0.5);
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 40%;
   cursor: pointer;
   z-index: 10;
-  animation: giftPulse 2s ease-in-out infinite;
   display: flex;
   align-items: center;
   justify-content: center;
+  background: linear-gradient(to top, rgba(232,91,84,0.12) 0%, transparent 100%);
+  animation: giftPulse 2s ease-in-out infinite;
 }
 
 .gift-tap-label {
   color: var(--accent-primary);
-  font-size: 10px;
+  font-size: 13px;
   font-weight: 600;
   white-space: nowrap;
-  text-shadow: 0 1px 4px rgba(0,0,0,0.8);
+  text-shadow: 0 1px 6px rgba(0,0,0,0.9);
   pointer-events: none;
+  padding: 6px 16px;
+  border: 1px solid rgba(232,91,84,0.5);
+  background: rgba(26,26,30,0.6);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
 }
 
 @keyframes giftPulse {
-  0%, 100% { box-shadow: 0 0 8px var(--accent-glow); transform: translateX(-50%) scale(1); }
-  50% { box-shadow: 0 0 24px var(--accent-glow); transform: translateX(-50%) scale(1.1); }
+  0%, 100% { background: linear-gradient(to top, rgba(232,91,84,0.08) 0%, transparent 100%); }
+  50% { background: linear-gradient(to top, rgba(232,91,84,0.2) 0%, transparent 100%); }
 }
 
 /* Hide gift tap on desktop */
