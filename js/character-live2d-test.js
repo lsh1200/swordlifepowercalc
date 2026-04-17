@@ -1,10 +1,10 @@
 // Character Live2D-style Animation
-// Displacement filter + AI-generated closed-eye overlay blink
+// Displacement filter + 2-frame eye overlay blink (half -> closed crossfade)
 (function () {
-  var CHAR_IMG = 'assets/images/character-clean.png';
-  var DISP_IMG = 'assets/images/character-displacement.png';
-  var EYE_L = 'assets/images/eye-left-closed.png';
-  var EYE_R = 'assets/images/eye-right-closed.png';
+  var CHAR_IMG   = 'assets/images/character-clean.png';
+  var DISP_IMG   = 'assets/images/character-displacement.png';
+  var EYE_HALF   = 'assets/images/eye-half-closed.png';
+  var EYE_CLOSED = 'assets/images/eye-closed.png';
 
   if (typeof PIXI === 'undefined') return;
   var canvas = document.getElementById('charCanvas');
@@ -35,8 +35,10 @@
   var sprite = null;
   var dispSprite = null;
   var dispFilter = null;
-  var eyeL = null;
-  var eyeR = null;
+  var dispFilterHalf = null;
+  var dispFilterClosed = null;
+  var eyeHalf = null;
+  var eyeClosed = null;
   var time = 0;
   var mouseX = 0;
   var mouseY = 0;
@@ -53,11 +55,10 @@
   var blinkPhase = 0;
   var BLINK_SPEED = 7;
 
-  // Eye patch positions in full 591x848 image (normalized)
-  var leftEyePos  = { x: 210/591, y: 215/848, w: 90/591, h: 50/848 };
-  var rightEyePos = { x: 320/591, y: 213/848, w: 85/591, h: 50/848 };
+  // Eye region position normalized against 1024x1536 base (see scripts/extract-character-assets.py)
+  var eyeRegionPos = { x: 378/1024, y: 218/1536, w: 274/1024, h: 94/1536 };
 
-  PIXI.Assets.load([CHAR_IMG, DISP_IMG, EYE_L, EYE_R]).then(function (textures) {
+  PIXI.Assets.load([CHAR_IMG, DISP_IMG, EYE_HALF, EYE_CLOSED]).then(function (textures) {
     sprite = new PIXI.Sprite(textures[CHAR_IMG]);
     sprite.anchor.set(0.5, 0);
     app.stage.addChild(sprite);
@@ -65,19 +66,23 @@
     dispSprite = new PIXI.Sprite(textures[DISP_IMG]);
     dispSprite.texture.baseTexture.wrapMode = PIXI.WRAP_MODES.REPEAT;
     dispFilter = new PIXI.DisplacementFilter(dispSprite, 0);
+    dispFilterHalf = new PIXI.DisplacementFilter(dispSprite, 0);
+    dispFilterClosed = new PIXI.DisplacementFilter(dispSprite, 0);
     app.stage.addChild(dispSprite);
     sprite.filters = [dispFilter];
 
-    // Closed-eye overlays
-    eyeL = new PIXI.Sprite(textures[EYE_L]);
-    eyeL.visible = false;
-    eyeL.alpha = 0;
-    app.stage.addChild(eyeL);
+    // Eye overlays (half + closed crossfade during blink)
+    eyeHalf = new PIXI.Sprite(textures[EYE_HALF]);
+    eyeHalf.visible = false;
+    eyeHalf.alpha = 0;
+    eyeHalf.filters = [dispFilterHalf];
+    app.stage.addChild(eyeHalf);
 
-    eyeR = new PIXI.Sprite(textures[EYE_R]);
-    eyeR.visible = false;
-    eyeR.alpha = 0;
-    app.stage.addChild(eyeR);
+    eyeClosed = new PIXI.Sprite(textures[EYE_CLOSED]);
+    eyeClosed.visible = false;
+    eyeClosed.alpha = 0;
+    eyeClosed.filters = [dispFilterClosed];
+    app.stage.addChild(eyeClosed);
 
     fitSprite();
     app.ticker.add(animate);
@@ -100,7 +105,7 @@
   }
 
   function positionEyes() {
-    if (!sprite || !eyeL || !eyeR) return;
+    if (!sprite || !eyeHalf || !eyeClosed) return;
     var tw = sprite.texture.width;
     var th = sprite.texture.height;
     var scX = sprite.scale.x;
@@ -108,15 +113,15 @@
     var ox = sprite.x - tw * scX * 0.5;
     var oy = sprite.y;
 
-    eyeL.x = ox + leftEyePos.x * tw * scX;
-    eyeL.y = oy + leftEyePos.y * th * scY;
-    eyeL.width = leftEyePos.w * tw * scX;
-    eyeL.height = leftEyePos.h * th * scY;
+    var ex = ox + eyeRegionPos.x * tw * scX;
+    var ey = oy + eyeRegionPos.y * th * scY;
+    var ew = eyeRegionPos.w * tw * scX;
+    var eh = eyeRegionPos.h * th * scY;
 
-    eyeR.x = ox + rightEyePos.x * tw * scX;
-    eyeR.y = oy + rightEyePos.y * th * scY;
-    eyeR.width = rightEyePos.w * tw * scX;
-    eyeR.height = rightEyePos.h * th * scY;
+    eyeHalf.x = eyeClosed.x = ex;
+    eyeHalf.y = eyeClosed.y = ey;
+    eyeHalf.width  = eyeClosed.width  = ew;
+    eyeHalf.height = eyeClosed.height = eh;
   }
 
   function animate(delta) {
@@ -185,19 +190,28 @@
         closeness = closeness * closeness * (3 - 2 * closeness);
       }
 
-      if (eyeL && eyeR) {
-        eyeL.visible = closeness > 0.05;
-        eyeR.visible = closeness > 0.05;
-        eyeL.alpha = closeness;
-        eyeR.alpha = closeness;
+      if (eyeHalf && eyeClosed) {
+        // closeness 0.0  -> neither visible
+        // closeness 0.5  -> half at full, closed hidden
+        // closeness 1.0  -> closed at full, half fading back out
+        var halfAlpha   = Math.max(0, 1 - Math.abs(closeness - 0.5) * 2);
+        var closedAlpha = Math.max(0, (closeness - 0.5) * 2);
+        eyeHalf.visible   = halfAlpha   > 0.02;
+        eyeClosed.visible = closedAlpha > 0.02;
+        eyeHalf.alpha   = halfAlpha;
+        eyeClosed.alpha = closedAlpha;
       }
     }
 
     // Displacement — hover boost uses smooth hoverAmount
     if (dispFilter) {
       var hoverBoost = 1 + hoverAmount * 0.5;
-      dispFilter.scale.x = (8 + Math.sin(time * 1.3) * 5) * hoverBoost;
-      dispFilter.scale.y = (5 + Math.cos(time * 1.8) * 3) * hoverBoost;
+      var dispX = (8 + Math.sin(time * 1.3) * 5) * hoverBoost;
+      var dispY = (5 + Math.cos(time * 1.8) * 3) * hoverBoost;
+      dispFilter.scale.x = dispX;
+      dispFilter.scale.y = dispY;
+      if (dispFilterHalf)   { dispFilterHalf.scale.x   = dispX; dispFilterHalf.scale.y   = dispY; }
+      if (dispFilterClosed) { dispFilterClosed.scale.x = dispX; dispFilterClosed.scale.y = dispY; }
     }
 
     if (dispSprite) {
