@@ -293,6 +293,12 @@ h1, h2, h3, h4, h5, h6 {
   opacity: 0.8;
 }
 
+#bug-report {
+  /* Don't stretch to match the notes column on the left — stay as tall as
+     the toggle so the popup anchors right below it. */
+  align-self: flex-start;
+}
+
 .bug-popup {
   bottom: auto !important;
   top: 100%;
@@ -301,6 +307,13 @@ h1, h2, h3, h4, h5, h6 {
   box-shadow: 0 8px 24px rgba(0,0,0,0.6) !important;
   right: 0;
   min-width: 300px;
+}
+
+/* Tips section must sit above table cards below — the bug popup
+   extends downward from within #tips and would otherwise be clipped. */
+#tips {
+  position: relative;
+  z-index: 10;
 }
 
 /* ── Help Icon / Popup ───────────────────────────────────────── */
@@ -327,6 +340,11 @@ h1, h2, h3, h4, h5, h6 {
   color: var(--bg-primary);
 }
 
+.help-anchor {
+  position: relative;
+  display: inline-block;
+}
+
 .help-popup {
   display: none;
   position: absolute;
@@ -344,6 +362,18 @@ h1, h2, h3, h4, h5, h6 {
   color: var(--text-secondary);
   max-width: 340px;
   box-shadow: 0 -4px 24px rgba(0,0,0,0.6);
+}
+
+/* Variant: popup anchored to the right of the ? icon instead of above */
+.help-popup-right {
+  bottom: auto;
+  left: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  margin-bottom: 0;
+  margin-left: 8px;
+  min-width: 280px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.6);
 }
 
 .help-popup.show {
@@ -426,6 +456,7 @@ h1, h2, h3, h4, h5, h6 {
   -webkit-backdrop-filter: blur(12px);
   padding: var(--space-2) var(--space-3);
   position: relative;
+  z-index: 0;
 }
 
 
@@ -484,27 +515,47 @@ h1, h2, h3, h4, h5, h6 {
 .report-row #tsum {
   flex: 1;
   min-width: 0;
+  position: relative;
+  z-index: 2;
 }
 
-/* Character Panel — Live2D-style animated canvas */
-.character-panel {
+/* Character panel slot: reserves 240px in the flex row layout.
+   The actual panel is positioned absolute inside and can extend left
+   so shirt/laces overflow behind the report box. */
+.character-panel-slot {
   flex: 0 0 240px;
   width: 240px;
   position: relative;
-  overflow: hidden;
   min-height: 400px;
   margin-top: -44px;
-  z-index: 2;
-  -webkit-mask-image: radial-gradient(
-    ellipse 90% 90% at 70% 45%,
-    black 50%,
-    transparent 80%
-  );
-  mask-image: radial-gradient(
-    ellipse 90% 90% at 70% 45%,
-    black 50%,
-    transparent 80%
-  );
+  z-index: 1;
+}
+
+/* Character Panel — Live2D-style animated canvas.
+   Wider than the slot; anchored to the right edge; left portion overflows
+   leftward over the report box but z-index keeps it behind. */
+.character-panel {
+  position: absolute;
+  top: 0;
+  right: -40px;
+  bottom: -140px;
+  width: 490px;
+  pointer-events: none;
+  /* Composite mask:
+     1. Radial fade around the character
+     2. Bottom 10% linear fade to transparent
+     3. Right 5% linear fade to transparent
+     Combined via intersect (opacity = min of all masks). */
+  -webkit-mask-image:
+    radial-gradient(ellipse 55% 75% at 67% 35%, black 45%, transparent 100%),
+    linear-gradient(to top, transparent 0%, black 25%),
+    linear-gradient(to left, transparent 0%, black 15%);
+  mask-image:
+    radial-gradient(ellipse 55% 75% at 67% 35%, black 45%, transparent 100%),
+    linear-gradient(to top, transparent 0%, black 25%),
+    linear-gradient(to left, transparent 0%, black 15%);
+  -webkit-mask-composite: source-in, source-in;
+  mask-composite: intersect, intersect;
 }
 
 .character-panel canvas {
@@ -513,36 +564,170 @@ h1, h2, h3, h4, h5, h6 {
   height: 100% !important;
 }
 
-.character-glow {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 50%;
-  background: linear-gradient(
-    to top,
-    var(--surface-primary) 0%,
-    transparent 100%
-  );
-  pointer-events: none;
-  z-index: 1;
-}
-
 /* Hide character when report is empty */
-.report-row:not(:has(#tsum:not(:empty))) .character-panel {
+.report-row:not(:has(#tsum:not(:empty))) .character-panel-slot {
   display: none;
 }
 
 @media (max-width: 767px) {
+  /* Character on top, report overlaid on bottom half (gift reveal) */
   .report-row {
-    flex-direction: column;
+    flex-direction: column-reverse;
+    align-items: center;
+    position: relative;
+  }
+
+  .character-panel-slot {
+    flex: 0 0 auto;
+    width: 100%;
+    max-width: 320px;
+    margin-top: 0;
+    min-height: 0;
+    /* Height driven by character panel's aspect ratio */
+    height: auto;
   }
 
   .character-panel {
-    flex: 0 0 auto;
-    height: 200px;
-    min-height: 200px;
+    position: relative;
+    top: auto;
+    right: auto;
+    bottom: auto;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1024 / 1266;
+    /* Simpler mask on mobile: fade bottom and sides into the page bg */
+    -webkit-mask-image:
+      linear-gradient(to bottom, black 70%, transparent 100%),
+      linear-gradient(to right, transparent 0%, black 8%, black 92%, transparent 100%);
+    -webkit-mask-composite: source-in;
+    mask-image:
+      linear-gradient(to bottom, black 70%, transparent 100%),
+      linear-gradient(to right, transparent 0%, black 8%, black 92%, transparent 100%);
+    mask-composite: intersect;
+    touch-action: pan-y;
   }
+
+  .character-panel canvas {
+    pointer-events: none;
+    touch-action: pan-y;
+  }
+
+  /* Report overlay: hidden until user taps the gift button */
+  .report-row #tsum {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    max-height: 55%;
+    overflow-y: auto;
+    background: rgba(26, 26, 30, 0.82) !important;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    z-index: 5;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.4s ease-out, transform 0.4s ease-out;
+    pointer-events: none;
+  }
+
+  .report-row #tsum.revealed {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+
+  .report-row.gift-wrapped #tsum {
+    opacity: 0;
+    transform: translateY(20px);
+    pointer-events: none;
+  }
+}
+
+/* ── Gift Tap Target (mobile-only reveal button) ───────────────── */
+/* On mobile the character head is centered (sprite.x = 50% of panel),
+   so the gift button sits at 50% to align with the character's hands. */
+.gift-tap {
+  position: absolute;
+  bottom: 16.5%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 52px;
+  height: 52px;
+  min-width: 52px;
+  max-width: 52px;
+  border-radius: 50%;
+  overflow: visible;
+  /* Parent .character-panel is pointer-events:none (so report clicks pass
+     through on desktop); re-enable here so the tap works on mobile. */
+  pointer-events: auto;
+  background: radial-gradient(circle,
+    rgba(255,215,140,0.15) 0%,
+    rgba(232,91,84,0.08) 50%,
+    transparent 70%
+  );
+  border: 1px solid rgba(255,215,140,0.4);
+  box-shadow:
+    0 0 12px rgba(255,215,140,0.2),
+    0 0 24px rgba(232,91,84,0.1),
+    inset 0 0 8px rgba(255,215,140,0.1);
+  cursor: pointer;
+  z-index: 10;
+  animation: giftPulse 3s ease-in-out infinite;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  touch-action: manipulation;
+}
+
+.gift-tap::before {
+  content: '';
+  position: absolute;
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+  border: 1px solid rgba(255,215,140,0.12);
+  animation: giftRing 3s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.gift-tap-label {
+  position: absolute;
+  bottom: -22px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: rgba(255,215,140,0.8);
+  font-family: var(--font-xianxia);
+  font-size: 11px;
+  font-weight: normal;
+  letter-spacing: 0.15em;
+  white-space: nowrap;
+  text-shadow: 0 0 8px rgba(255,215,140,0.3), 0 1px 4px rgba(0,0,0,0.9);
+  pointer-events: none;
+}
+
+@keyframes giftPulse {
+  0%, 100% {
+    box-shadow:
+      0 0 8px rgba(255,215,140,0.15),
+      0 0 16px rgba(232,91,84,0.05),
+      inset 0 0 6px rgba(255,215,140,0.08);
+  }
+  50% {
+    box-shadow:
+      0 0 16px rgba(255,215,140,0.3),
+      0 0 32px rgba(232,91,84,0.12),
+      inset 0 0 12px rgba(255,215,140,0.15);
+  }
+}
+
+@keyframes giftRing {
+  0%, 100% { opacity: 0.3; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(1.08); }
+}
+
+/* Hide gift tap on desktop */
+@media (min-width: 768px) {
+  .gift-tap { display: none !important; }
 }
 
 /* ── Buttons ──────────────────────────────────────────────────── */
@@ -1214,12 +1399,6 @@ td[style*="cursor: pointer"]:hover {
   /* Gap between stacked table columns on mobile */
   .row > .col-12.col-md-6 + .col-12.col-md-6 {
     margin-top: var(--space-5);
-  }
-
-  /* Bug report popup: entire tips section must sit above table cards below */
-  #tips {
-    position: relative;
-    z-index: 10;
   }
 
   #stbl, #ttbl {

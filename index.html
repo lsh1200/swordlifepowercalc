@@ -23,8 +23,17 @@
   <link rel="icon" type="image/png" href="assets/meta/favicon.png">
   <link rel="icon" type="image/x-icon" href="assets/meta/favicon.ico">
   <title>神通推演計算器-問劍長生</title>
+  <!-- Cache-buster: on localhost, appends fresh timestamp to local assets so
+       browser re-fetches CSS/JS instead of serving cached copies.
+       On production (GitHub Pages), falls back to a static version string. -->
+  <script>
+    (function () {
+      var isLocal = /^(localhost|127\.0\.0\.1|0\.0\.0\.0)$/.test(location.hostname);
+      window.__CACHE_V__ = isLocal ? 't=' + Date.now() : 'v=100';
+    })();
+  </script>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
-  <link rel="stylesheet" href="css/styles.css?v=70">
+  <script>document.write('<link rel="stylesheet" href="css/styles.css?' + window.__CACHE_V__ + '">');</script>
   <script src="js/vendor/jquery.js"></script>
   <script src="js/vendor/lz-string.min.js"></script>
 </head>
@@ -54,9 +63,9 @@
               <h6>2.試算結果未必是最佳，僅協助玩家找出關鍵轉換神通</h6>
               <h6>3.部分資料參考大陸來源，試算結果僅供參考</h6>
               <h6>4.輸入防呆有待完善，可能有bug請慎入</h6>
-              <h6 style="position:relative">5.配置自動保存，關閉瀏覽器也不會丟失
+              <h6>5.配置自動保存，關閉瀏覽器也不會丟失<span class="help-anchor">
                 <span class="help-icon" onclick="this.nextElementSibling.classList.toggle('show')">?</span>
-                <span class="help-popup">
+                <span class="help-popup help-popup-right">
                   <strong>如何在 Chrome 查看儲存資料：</strong><br>
                   1. 按 <kbd>F12</kbd> 開啟開發者工具<br>
                   2. 點上方的 <kbd>Application</kbd> 分頁<br>
@@ -64,7 +73,7 @@
                   4. 點擊網站的 URL<br>
                   5. 找到 <kbd>snp_save</kbd> 即為儲存的配置資料
                 </span>
-              </h6>
+              </span></h6>
               <h6 style="margin-top:0.5rem">
                 <label for="codeBox" style="color:var(--text-secondary);font-size:12px">配置碼：</label><br>
                 <input id="codeBox" type="text" class="form-control form-control-sm" placeholder="點擊「生成」取得配置碼，或貼上朋友的配置碼後點擊「匯入」" onfocus="this.select()" style="font-family:var(--font-mono);font-size:12px;margin:4px 0"><br>
@@ -171,9 +180,13 @@
         <!-- Summary + Character -->
         <div class="report-row mt-3">
           <div id="tsum" class="p-3" style="min-height:0"></div>
-          <div class="character-panel">
-            <canvas id="charCanvas"></canvas>
-            <div class="character-glow"></div>
+          <div class="character-panel-slot">
+            <div class="character-panel">
+              <canvas id="charCanvas"></canvas>
+              <div id="giftTap" class="gift-tap" style="display:none">
+                <span class="gift-tap-label">點擊打開</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -301,8 +314,8 @@
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/pixi.js@7.3.3/dist/pixi.min.js"></script>
-  <script src="js/snp.js?v=67"></script>
-  <script src="js/character-live2d.js?v=67"></script>
+  <script>document.write('<scr' + 'ipt src="js/snp.js?' + window.__CACHE_V__ + '"></scr' + 'ipt>');</script>
+  <script>document.write('<scr' + 'ipt src="js/character-live2d.js?' + window.__CACHE_V__ + '"></scr' + 'ipt>');</script>
   <script>document.addEventListener('click',function(e){if(!e.target.classList.contains('help-icon')&&!e.target.classList.contains('bug-report-toggle')){document.querySelectorAll('.help-popup.show').forEach(function(p){p.classList.remove('show')})}});</script>
 </body>
 </html>

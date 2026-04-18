@@ -1,10 +1,20 @@
 // Character Live2D-style Animation
-// Displacement filter + AI-generated closed-eye overlay blink
+// Displacement filter + per-eye patch blink (base stays static)
 (function () {
-  var CHAR_IMG = 'assets/images/character-clean.png';
-  var DISP_IMG = 'assets/images/character-displacement.png';
-  var EYE_L = 'assets/images/eye-left-closed.png';
-  var EYE_R = 'assets/images/eye-right-closed.png';
+  var CHAR_IMG      = 'assets/images/character-open.png';
+  var DISP_IMG      = 'assets/images/character-displacement.png';
+  var EYE_L_HALF    = 'assets/images/eye-L-half.png';
+  var EYE_L_CLOSED  = 'assets/images/eye-L-closed.png';
+  var EYE_R_HALF    = 'assets/images/eye-R-half.png';
+  var EYE_R_CLOSED  = 'assets/images/eye-R-closed.png';
+
+  // Anchor X at the head's horizontal centroid so the head lands at panel center.
+  var ANCHOR_X = 0.630;
+
+  // Per-eye patch positions as fractions of the base image (1024x1266).
+  // Tight crops covering only the eye region itself (no eyebrow/forehead).
+  var EYE_L = { x: 0.5137, y: 0.2385, w: 0.0850, h: 0.0458 };
+  var EYE_R = { x: 0.6582, y: 0.2417, w: 0.0859, h: 0.0427 };
 
   if (typeof PIXI === 'undefined') return;
   var canvas = document.getElementById('charCanvas');
@@ -29,14 +39,20 @@
     backgroundAlpha: 0,
     antialias: true,
     autoDensity: true,
-    resolution: 2,
+    resolution: Math.min(window.devicePixelRatio || 1, 3),
   });
 
+  PIXI.BaseTexture.defaultOptions.scaleMode = PIXI.SCALE_MODES.LINEAR;
+  PIXI.BaseTexture.defaultOptions.mipmap = PIXI.MIPMAP_MODES.ON;
+
+  var charContainer = null;
   var sprite = null;
-  var dispSprite = null;
-  var dispFilter = null;
   var eyeL = null;
   var eyeR = null;
+  var texL_half = null, texL_closed = null, curL = null;
+  var texR_half = null, texR_closed = null, curR = null;
+  var dispSprite = null;
+  var dispFilter = null;
   var time = 0;
   var mouseX = 0;
   var mouseY = 0;
@@ -45,43 +61,50 @@
   var currentParallaxY = 0;
   var targetParallaxX = 0;
   var targetParallaxY = 0;
-  var hoverAmount = 0; // 0=not hovering, 1=fully hovering (lerped)
+  var hoverAmount = 0;
 
-  // Blink
   var blinkTimer = 0;
   var blinkInterval = 2;
   var blinkPhase = 0;
   var BLINK_SPEED = 7;
 
-  // Eye patch positions in full 591x848 image (normalized)
-  var leftEyePos  = { x: 210/591, y: 215/848, w: 90/591, h: 50/848 };
-  var rightEyePos = { x: 320/591, y: 213/848, w: 85/591, h: 50/848 };
+  PIXI.Assets.load([CHAR_IMG, DISP_IMG, EYE_L_HALF, EYE_L_CLOSED, EYE_R_HALF, EYE_R_CLOSED]).then(function (textures) {
+    // One container for base + eye overlays so they all share a single
+    // filter pass — identical displacement warp on every pixel.
+    charContainer = new PIXI.Container();
+    app.stage.addChild(charContainer);
 
-  PIXI.Assets.load([CHAR_IMG, DISP_IMG, EYE_L, EYE_R]).then(function (textures) {
     sprite = new PIXI.Sprite(textures[CHAR_IMG]);
-    sprite.anchor.set(0.5, 0);
-    app.stage.addChild(sprite);
+    sprite.anchor.set(ANCHOR_X, 0);
+    charContainer.addChild(sprite);
+
+    texL_half = textures[EYE_L_HALF];
+    texL_closed = textures[EYE_L_CLOSED];
+    texR_half = textures[EYE_R_HALF];
+    texR_closed = textures[EYE_R_CLOSED];
+    curL = texL_half;
+    curR = texR_half;
+
+    eyeL = new PIXI.Sprite(texL_half);
+    eyeL.anchor.set(0, 0);
+    eyeL.visible = false;
+    charContainer.addChild(eyeL);
+
+    eyeR = new PIXI.Sprite(texR_half);
+    eyeR.anchor.set(0, 0);
+    eyeR.visible = false;
+    charContainer.addChild(eyeR);
 
     dispSprite = new PIXI.Sprite(textures[DISP_IMG]);
     dispSprite.texture.baseTexture.wrapMode = PIXI.WRAP_MODES.REPEAT;
     dispFilter = new PIXI.DisplacementFilter(dispSprite, 0);
+    // Single filter on the container — composited base+eyes warp as one image
+    charContainer.filters = [dispFilter];
     app.stage.addChild(dispSprite);
-    sprite.filters = [dispFilter];
-
-    // Closed-eye overlays
-    eyeL = new PIXI.Sprite(textures[EYE_L]);
-    eyeL.visible = false;
-    eyeL.alpha = 0;
-    app.stage.addChild(eyeL);
-
-    eyeR = new PIXI.Sprite(textures[EYE_R]);
-    eyeR.visible = false;
-    eyeR.alpha = 0;
-    app.stage.addChild(eyeR);
 
     fitSprite();
     app.ticker.add(animate);
-  }).catch(function() {
+  }).catch(function () {
     // Asset load failed — degrade gracefully, calculator still works
   });
 
@@ -91,34 +114,36 @@
     app.renderer.resize(s.w, s.h);
     var tw = sprite.texture.width;
     var th = sprite.texture.height;
-    var scale = s.w / tw;
-    sprite.scale.set(scale);
-    sprite.x = s.w * 0.55;
+    var baseScale = Math.min(s.w / tw, s.h / th);
+    sprite.scale.set(baseScale);
+    // On mobile the character is its own full panel → head at 50% (screen center).
+    // On desktop the character overlaps the report box → head at 65% (visible center).
+    var xRatio = window.innerWidth < 768 ? 0.5 : 0.65;
+    sprite.x = s.w * xRatio;
     sprite.y = 0;
+    positionEyes();
+  }
+
+  function placeEye(sp, frac) {
+    var tw = sprite.texture.width;
+    var th = sprite.texture.height;
+    var sx = sprite.scale.x;
+    var sy = sprite.scale.y;
+    var imgLeft = sprite.x - ANCHOR_X * tw * sx;
+    var imgTop  = sprite.y;
+    sp.x = imgLeft + frac.x * tw * sx;
+    sp.y = imgTop  + frac.y * th * sy;
+    sp.width  = frac.w * tw * sx;
+    sp.height = frac.h * th * sy;
   }
 
   function positionEyes() {
     if (!sprite || !eyeL || !eyeR) return;
-    var tw = sprite.texture.width;
-    var th = sprite.texture.height;
-    var scX = sprite.scale.x;
-    var scY = sprite.scale.y;
-    var ox = sprite.x - tw * scX * 0.5;
-    var oy = sprite.y;
-
-    eyeL.x = ox + leftEyePos.x * tw * scX;
-    eyeL.y = oy + leftEyePos.y * th * scY;
-    eyeL.width = leftEyePos.w * tw * scX;
-    eyeL.height = leftEyePos.h * th * scY;
-
-    eyeR.x = ox + rightEyePos.x * tw * scX;
-    eyeR.y = oy + rightEyePos.y * th * scY;
-    eyeR.width = rightEyePos.w * tw * scX;
-    eyeR.height = rightEyePos.h * th * scY;
+    placeEye(eyeL, EYE_L);
+    placeEye(eyeR, EYE_R);
   }
 
   function animate(delta) {
-    // Skip rendering when panel is hidden to save GPU/CPU
     if (panel.offsetParent === null || panel.clientHeight === 0) return;
     time += delta * 0.016;
     var s = getSize();
@@ -127,19 +152,19 @@
     if (sprite) {
       var tw = sprite.texture.width;
       var th = sprite.texture.height;
-      var baseScale = Math.max(s.w / tw, s.h / th);
+      var baseScale = Math.min(s.w / tw, s.h / th);
 
       var breathY = 1 + Math.sin(time * 2.2) * 0.015;
       var breathX = 1 + Math.sin(time * 2.2) * 0.005;
       sprite.scale.set(baseScale * breathX, baseScale * breathY);
 
       var drift = Math.sin(time * 0.7) * 6;
-      sprite.x = s.w * 0.55 + drift;
+      var xRatio = window.innerWidth < 768 ? 0.5 : 0.65;
+      sprite.x = s.w * xRatio + drift;
 
       var bob = Math.sin(time * 1.0) * 3;
       sprite.y = bob;
 
-      // Lerp hover amount — slow fade out when cursor leaves
       var hoverTarget = isHovering ? 1 : 0;
       var hoverLerp = isHovering ? 0.06 : 0.003;
       hoverAmount += (hoverTarget - hoverAmount) * hoverLerp;
@@ -148,7 +173,6 @@
         targetParallaxX = (mouseX - s.w / 2) * 0.04;
         targetParallaxY = (mouseY - s.h / 2) * 0.02;
       }
-      // When not hovering, target stays at last position and slowly decays
       targetParallaxX *= isHovering ? 1 : 0.998;
       targetParallaxY *= isHovering ? 1 : 0.998;
 
@@ -157,10 +181,8 @@
       sprite.x += currentParallaxX;
       sprite.y += currentParallaxY;
 
-      // Position eye overlays to match sprite
       positionEyes();
 
-      // Blink
       blinkTimer += dt;
       if (blinkPhase === 0 && blinkTimer >= blinkInterval) {
         blinkPhase = 0.001;
@@ -180,18 +202,21 @@
           blinkPhase = 0;
         }
         closeness = Math.max(0, Math.min(1, closeness));
-        closeness = closeness * closeness * (3 - 2 * closeness);
       }
 
-      if (eyeL && eyeR) {
-        eyeL.visible = closeness > 0.05;
-        eyeR.visible = closeness > 0.05;
-        eyeL.alpha = closeness;
-        eyeR.alpha = closeness;
+      if (closeness < 0.33) {
+        eyeL.visible = false;
+        eyeR.visible = false;
+      } else {
+        eyeL.visible = true;
+        eyeR.visible = true;
+        var nextL = closeness >= 0.75 ? texL_closed : texL_half;
+        var nextR = closeness >= 0.75 ? texR_closed : texR_half;
+        if (nextL !== curL) { eyeL.texture = nextL; curL = nextL; }
+        if (nextR !== curR) { eyeR.texture = nextR; curR = nextR; }
       }
     }
 
-    // Displacement — hover boost uses smooth hoverAmount
     if (dispFilter) {
       var hoverBoost = 1 + hoverAmount * 0.5;
       dispFilter.scale.x = (8 + Math.sin(time * 1.3) * 5) * hoverBoost;
