@@ -1092,8 +1092,48 @@ function discardTarget() {
 	refreshDirtyIndicators();
 }
 
+// ===== Reset Source Panel =====
+function openResetModal() {
+	document.getElementById('resetSlots').checked = true;
+	document.getElementById('resetFrags').checked = false;
+	document.getElementById('resetKeep').checked = false;
+	bootstrap.Modal.getOrCreateInstance(document.getElementById('resetModal')).show();
+}
+
+function applyReset() {
+	var doSlots = document.getElementById('resetSlots').checked;
+	var doFrags = document.getElementById('resetFrags').checked;
+	var doKeep = document.getElementById('resetKeep').checked;
+	var modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('resetModal'));
+
+	if (!doSlots && !doFrags && !doKeep) {
+		modal.hide();
+		return;
+	}
+
+	if (doSlots) {
+		for (var i = 0; i < SLOT_COUNT; i++) {
+			source[i].level = 1;
+			source[i].src = [];
+		}
+	}
+	if (doFrags) {
+		frags = [];
+		fragp = 0;
+		fragb = 0;
+	}
+	if (doKeep) {
+		keep = [];
+	}
+
+	updatedatadone();
+	modal.hide();
+}
+
 window.discardSource = discardSource;
 window.discardTarget = discardTarget;
+window.openResetModal = openResetModal;
+window.applyReset = applyReset;
 window.generateCode = generateCode;
 window.loadCode = loadCode;
 window.encodeState = encodeState;

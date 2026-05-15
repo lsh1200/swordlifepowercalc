@@ -111,6 +111,7 @@
                 <span class="badge text-bg-secondary">目前推演神通</span>
                 <span id="srcDirty" style="display:none;font-size:12px"></span>
                 <button id="srcDiscard" class="btn btn-outline-danger btn-sm ms-1" style="display:none;font-size:10px;padding:1px 6px" onclick="discardSource()">放棄更改</button>
+                <button id="srcReset" class="btn btn-outline-warning btn-sm ms-1" style="font-size:10px;padding:1px 6px" onclick="openResetModal()">重置</button>
               </h4>
             </caption>
             <thead>
@@ -302,6 +303,37 @@
         </div>
       </div>
 
+    </div>
+
+    <!-- ── Reset Source Modal ─────────────────────────────── -->
+    <div class="modal fade" id="resetModal" tabindex="-1" aria-labelledby="resetModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="resetModalLabel">重置目前推演神通</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <p style="margin-bottom:0.75rem">勾選要重置的項目：</p>
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="resetSlots" checked>
+              <label class="form-check-label" for="resetSlots">6 個神通槽（等級歸 1星，清空仙品殘卷）</label>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="resetFrags">
+              <label class="form-check-label" for="resetFrags">尚未使用殘卷（含極品 / 上品）</label>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="resetKeep">
+              <label class="form-check-label" for="resetKeep">保留神通</label>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+            <button type="button" class="btn btn-danger" onclick="applyReset()">確認重置</button>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- ── Footer ──────────────────────────────────────────── -->
