@@ -102,3 +102,6 @@ Thumbs.db
 
 # gstack
 .gstack/
+
+# graphify knowledge graph output
+graphify-out/
